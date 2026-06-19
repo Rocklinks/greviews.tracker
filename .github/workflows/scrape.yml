@@ -1,0 +1,22 @@
+name: Daily Scrape
+on:
+  schedule:
+    - cron: '20 18 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 160
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install playwright && playwright install chromium --with-deps
+      - run: python scraper/scraper.py
+      - run: |
+          git config user.name "scraper-bot"
+          git config user.email "bot@sathya"
+          git add docs/data/
+          git diff --cached --quiet || (git commit -m "scrape $(date -u +%Y-%m-%d)" && git push)
