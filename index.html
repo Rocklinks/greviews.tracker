@@ -360,7 +360,7 @@ async function init() {
   tickClock(); setInterval(tickClock, 1000);
   await loadData();
   setInterval(loadData, 300000);
-  setTimeout(liveRefresh, 800);
+  // live loads on click only
 }
 
 function tickClock() {
