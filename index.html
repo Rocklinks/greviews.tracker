@@ -413,9 +413,7 @@ tbody td{padding:11px 14px;white-space:nowrap}
     </div>
    <div class="s-group">
       <div class="s-label">Tools</div>
-      <div class="s-item" onclick="window.location.href='live.html'">
-        <span class="s-icon">💻</span>Live Tracker<span class="s-ext" style="color:var(--teal)">↗</span>
-      </div>
+      <div class="s-item" onclick="openLivePanel()"><span class="s-icon">⚡</span>Live Tracker</div>
       <div class="s-item" onclick="window.location.href='sathya-weather.html'">
         <span class="s-icon">⛅</span>Weather<span class="s-ext" style="color:var(--amber)">↗</span>
       </div>
@@ -447,9 +445,10 @@ tbody td{padding:11px 14px;white-space:nowrap}
 var HF_REPO = "RocklinKS/reviews";
 var HF_BASE = "https://huggingface.co/datasets/" + HF_REPO + "/resolve/main/data/";
 var HF_WRITE_TOKEN = ""; // Set via Secrets or leave blank for read-only
+var HF_SPACE_URL = "https://rocklinks-sathya-live.hf.space";
 var GITHUB_REPO = "Rocklinks/greviews.tracker/";
 var GITHUB_PAT  = "";
-var DASHBOARD_PASS = "sathya2026";
+var DASHBOARD_PASS = "prame26@";
 var EXCEL_URL = "./data/reviews.xlsx";
 
 var AGM_MAP = {
@@ -997,40 +996,67 @@ function importExcel(input) {
   var reader=new FileReader();
   reader.onload=function(e){
     try{
-      var wb=XLSX.read(e.target.result,{type:'binary'});
+      var wb=XLSX.read(e.target.result,{type:'array'});
       var ws=wb.Sheets[wb.SheetNames[0]];
-      var rows=XLSX.utils.sheet_to_json(ws,{defval:''});
-      if(!rows.length){showToast('No data in Excel.');return;}
-      var headers=Object.keys(rows[0]);
-      var fixed=['#','Branch','AGM','Star Rating','Overall Reviews','Monthly Reviews'];
-      var dateCols=headers.filter(function(h){return !fixed.includes(h)&&h.includes(' Daily');});
+      var allRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+      // Find header row (has "Branch" in col A)
+      var hdrIdx=-1;
+      for(var i=0;i<Math.min(10,allRows.length);i++){
+        if(String(allRows[i][0]||'').toLowerCase()==='branch'){hdrIdx=i;break;}
+      }
+      if(hdrIdx<0){showToast('Cannot find header row.');return;}
+      var hdr=allRows[hdrIdx];
+      var dataRows=allRows.slice(hdrIdx+1).filter(function(r){return r[0];});
+      var month=null,year=null;
+      var dateCols={};
+      for(var ci=4;ci<hdr.length;ci++){
+        var hv=hdr[ci]; if(hv===null||hv===undefined) continue;
+        var dateKey=null;
+        if(hv instanceof Date){
+          year=hv.getFullYear();month=hv.getMonth();
+          dateKey=hv.toISOString().slice(0,10);
+        }else if(typeof hv==='number'&&year!==null){
+          var dt=new Date(year,month,hv);
+          dateKey=dt.toISOString().slice(0,10);
+        }else if(typeof hv==='string'&&hv.match(/^\d{4}-\d{2}-\d{2}/)){
+          dateKey=hv.slice(0,10);
+          var parts=dateKey.split("-");
+          year=parseInt(parts[0]);month=parseInt(parts[1])-1;
+        }
+        if(dateKey) dateCols[ci]=dateKey;
+      }
       var updated=0;
-      rows.forEach(function(row){
-        var bid=String(row['#']||'').trim(); if(!bid||!D.branches[bid]) return;
-        var overall=parseInt(row['Overall Reviews'])||0;
-        var monthly=parseInt(row['Monthly Reviews'])||0;
-        var star=parseFloat(row['Star Rating'])||0;
-        D.branches[bid].overall=overall; D.branches[bid].monthly=monthly;
-        if(star) D.branches[bid].star_rating=star;
-        dateCols.forEach(function(col){
-          var parsed=parseDateStr(col.replace(' Daily','').trim());
-          if(!parsed) return;
-          if(!D.daily[parsed]) D.daily[parsed]={};
-          if(!D.daily[parsed][bid]) D.daily[parsed][bid]={};
-          D.daily[parsed][bid].daily_count=parseInt(row[col])||0;
-          D.daily[parsed][bid].total_snap=overall;
-          D.daily[parsed][bid].monthly=monthly;
-          if(star) D.daily[parsed][bid].star_rating=star;
+      dataRows.forEach(function(row,ri){
+        var bid=String(ri+1);
+        var name=String(row[0]||'').trim();
+        var starStr=String(row[1]||'0').replace('★','');
+        var star=parseFloat(starStr)||0;
+        var overall=parseInt(row[2])||0;
+        var monthly=parseInt(row[3])||0;
+        if(D.branches[bid]){
+          D.branches[bid].overall=overall;
+          D.branches[bid].monthly=monthly;
+          if(star) D.branches[bid].star_rating=star;
+        }
+        Object.keys(dateCols).forEach(function(ci){
+          var dateKey=dateCols[ci];
+          var count=parseInt(row[ci])||0;
+          if(!D.daily[dateKey]) D.daily[dateKey]={};
+          if(!D.daily[dateKey][bid]) D.daily[dateKey][bid]={};
+          D.daily[dateKey][bid].daily_count=count;
+          D.daily[dateKey][bid].total_snap=overall;
+          D.daily[dateKey][bid].monthly=monthly;
+          if(star) D.daily[dateKey][bid].star_rating=star;
           updated++;
         });
       });
       enrichAll(); buildAgmSidebar();
       document.getElementById('mc').innerHTML=buildEditView();
-      showToast('Excel imported: '+updated+' cells. Click Save to GitHub.');
+      showToast('Excel imported: '+updated+' cells.');
     }catch(err){showToast('Excel error: '+err.message);}
     input.value='';
   };
-  reader.readAsBinaryString(file);
+  reader.readAsArrayBuffer(file);
 }
 
 function parseDateStr(str){
@@ -1119,62 +1145,32 @@ function renderLivePanel() {
 }
 
 async function liveRefresh() {
-  if (!checkPass()) return;
-  if (!GITHUB_REPO || !GITHUB_PAT) {
-    showToast("Set GITHUB_REPO and GITHUB_PAT in index.html to enable live refresh.");
-    return;
-  }
   var btn = document.getElementById("live-refresh-btn");
-  btn.classList.add("loading"); btn.textContent = "⏳ Triggering…";
+  btn.classList.add("loading"); btn.textContent = "⏳ Fetching…";
 
-  // Step 1: Trigger GitHub Actions live.yml via workflow_dispatch
+  // Try HF Space /live endpoint first
   try {
-    var tr = await fetch(
-      "https://api.github.com/repos/" + GITHUB_REPO + "/actions/workflows/live.yml/dispatches",
-      { method:"POST",
-        headers:{"Authorization":"Bearer "+GITHUB_PAT,"Content-Type":"application/json"},
-        body: JSON.stringify({ref:"main"}) }
-    );
-    if (!tr.ok) throw new Error("Dispatch failed: " + tr.status);
-    showToast("Live scrape triggered ⚡ Waiting for results (~3 min)…");
-  } catch(e) {
-    showToast("Trigger failed: " + e.message);
-    btn.classList.remove("loading"); btn.textContent = "🔄 Refresh"; return;
-  }
-
-  // Step 2: Poll HF live/current.json every 10s until it updates (max 5 min)
-  btn.textContent = "⏳ Running…";
-  var prevTriggered = "";
-  try {
-    var pr = await fetch(HF_BASE.replace("/data/","") + "/resolve/main/live/current.json");
-    if (pr.ok) { var pd = await pr.json(); prevTriggered = pd.triggered_at || ""; }
-  } catch(e) {}
-
-  var polls = 0, maxPolls = 30; // 30 × 10s = 5 min
-  var pollTimer = setInterval(async function() {
-    polls++;
-    try {
-      var lr = await fetch(
-        "https://huggingface.co/datasets/" + HF_REPO + "/resolve/main/live/current.json?t=" + Date.now()
-      );
-      if (lr.ok) {
-        var ld = await lr.json();
-        if (ld.triggered_at && ld.triggered_at !== prevTriggered) {
-          clearInterval(pollTimer);
+    var r = await fetch(HF_SPACE_URL + "/live?t=" + Date.now());
+    if (r.ok) {
+      var ct = r.headers.get("content-type") || "";
+      if (ct.includes("json")) {
+        var ld = await r.json();
+        if (ld.branches && ld.branches.length) {
           LIVE.data = ld;
-          renderLivePanel();
+          renderLivePanelFromHF();
           btn.classList.remove("loading"); btn.textContent = "🔄 Refresh";
-          showToast("Live data updated ✓ " + ld.total_new_today + " new reviews today");
+          showToast("Live data updated ✓ " + (ld.total_new_today || ld.total_today || 0) + " new reviews today");
           return;
         }
       }
-    } catch(e) {}
-    if (polls >= maxPolls) {
-      clearInterval(pollTimer);
-      btn.classList.remove("loading"); btn.textContent = "🔄 Refresh";
-      showToast("Timed out. Check GitHub Actions.");
     }
-  }, 10000);
+  } catch(e) {}
+
+  // Fallback: show today's Excel data
+  LIVE.data = {};
+  renderLivePanel();
+  btn.classList.remove("loading"); btn.textContent = "🔄 Refresh";
+  showToast("Showing today's snapshot from Excel (HF Space /live unavailable)");
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1193,7 +1189,7 @@ async function loadRevData(date) {
   var body = document.getElementById("rev-panel-body");
   body.innerHTML = '<div class="loading"><div class="spinner"></div>Loading reviews…</div>';
   try {
-    var url = "docs/data/reviews_detail/" + date + ".json?t=" + Date.now();
+    var url = "https://rocklinks.github.io/new-scrape-rev/docs/data/reviews_detail/" + date + ".json?t=" + Date.now();
     var r = await fetch(url);
     if (!r.ok) throw new Error("No data for " + date);
     REV.data = await r.json();
@@ -1205,7 +1201,7 @@ async function loadRevData(date) {
 
 async function loadDeletedData(date) {
   try {
-    var url = "docs/data/reviews_detail/deleted_" + date + ".json?t=" + Date.now();
+    var url = "https://rocklinks.github.io/new-scrape-rev/docs/data/reviews_detail/deleted_" + date + ".json?t=" + Date.now();
     var r = await fetch(url);
     if (r.ok) { REV.deletedData = await r.json(); }
     else { REV.deletedData = []; }
