@@ -392,7 +392,7 @@ tbody td{padding:11px 14px;white-space:nowrap}
       <span class="neg-badge" id="neg-badge"></span>
     </button>
     <div class="exp-split">
-      <button class="exp-split-main" onclick="openModal('xls')">⬇ Export</button>
+      <button class="exp-split-main" onclick="openModal('xls')">⬇ Save</button>
       <div class="exp-split-sep"></div>
       <button class="exp-split-pdf" onclick="openModal('pdf')" title="PDF">PDF</button>
     </div>
@@ -836,13 +836,11 @@ function buildEditView() {
   }).join('');
   return '<div class="section"><div class="section-hdr"><span class="section-title">✏️ Edit Data</span>' +
     '<div class="ctrls"><label style="font-size:13px;font-weight:500;color:var(--text2)">Date:</label><select class="fsel" onchange="editSwitchDate(this.value)">'+dateOpts+'</select>' +
-    '<button class="btn btn-primary" onclick="saveEdits()">✓ Save</button>' +
-    '<button class="btn btn-primary" onclick="pushToGitHub()" style="background:linear-gradient(135deg,#059669,#0d9488)">⬆ Push to GitHub</button>' +
-    '<button class="btn btn-green" onclick="downloadEditedJSON()">⬇ Download</button>' +
+    '<button class="btn btn-primary" onclick="saveAndPush()">✓ Save & Push</button>' +
     '<label class="btn" style="border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer" title="Upload Excel and push to GitHub">📥 Upload Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="importExcelAndPush(this)"></label>' +
     '</div></div>' +
     '<div class="edit-warning"><span>ℹ️</span><div>' +
-    '<b>Edit → Save → Push to GitHub.</b> Changes go live at <code>docs/data/reviews.json</code>.' +
+    '<b>Edit → Save & Push.</b> Changes go live at <code>docs/data/reviews.json</code>.' +
     '<br>'+(prevDate?'Baseline: <b>'+fmtDate(prevDate)+'</b>':'<span style="color:var(--amber)">No previous date.</span>')+'</div></div>' +
     '<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Branch</th><th>AGM</th><th>⭐</th><th>Overall</th><th>'+fmtDateShort(editDate)+' Daily</th><th>Monthly</th></tr></thead><tbody>'+rows+'</tbody></table></div>' +
     '<div style="padding:10px 18px;background:var(--surface2);border-top:1px solid var(--border);font-size:12px;color:var(--muted)">Editing: <b>'+fmtDate(editDate)+'</b></div></div>';
@@ -876,7 +874,7 @@ function editSwitchDate(d) {
 }
 function saveEdits() {
   var keys=Object.keys(pendingEdits);
-  if(!keys.length){showToast('No changes.');return;}
+  if(!keys.length) return 0;
   var count=0;
   keys.forEach(function(bid){
     var edits=pendingEdits[bid];
@@ -891,13 +889,14 @@ function saveEdits() {
     }
   });
   pendingEdits={}; enrichAll(); buildAgmSidebar();
-  document.getElementById('mc').innerHTML=buildEditView();
-  showToast('Saved '+count+' fields. Click "Push to GitHub" to publish.');
+  return count;
 }
-function downloadEditedJSON() {
-  var blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
-  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='reviews.json'; a.click(); showToast('Downloaded!');
+function saveAndPush() {
+  var count = saveEdits();
+  if (!count) { showToast('No changes to save.'); return; }
+  document.getElementById('mc').innerHTML=buildEditView();
+  showToast('Saved '+count+' fields. Pushing to GitHub…');
+  pushToGitHub();
 }
 
 /* ── GITHUB PUSH ── */
@@ -915,17 +914,13 @@ function ensureGitHubToken() {
 
 async function pushToGitHub() {
   if (!ensureGitHubToken()) { showToast("GitHub token required."); return; }
-  var btn = event && event.target;
-  if (btn) { btn.disabled = true; btn.textContent = "⏳ Pushing…"; }
   try {
     var path = "docs/data/reviews.json";
     var content = btoa(unescape(encodeURIComponent(JSON.stringify(D, null, 2))));
-    // Get current SHA
     var getUrl = "https://api.github.com/repos/" + GITHUB_REPO + "/contents/" + path + "?ref=" + GH_BRANCH;
     var getR = await fetch(getUrl, {headers: {"Authorization": "token " + GH_TOKEN, "Accept": "application/vnd.github.v3+json"}});
     var sha = null;
     if (getR.ok) { var gd = await getR.json(); sha = gd.sha; }
-    // Create/update file
     var body = {message: "Update reviews.json via dashboard", content: content, branch: GH_BRANCH};
     if (sha) body.sha = sha;
     var putR = await fetch("https://api.github.com/repos/" + GITHUB_REPO + "/contents/" + path, {
@@ -934,12 +929,11 @@ async function pushToGitHub() {
       body: JSON.stringify(body)
     });
     if (!putR.ok) { var err = await putR.json(); throw new Error(err.message || "Push failed"); }
-    showToast("✅ Pushed to GitHub successfully!");
+    showToast("Pushed to GitHub successfully!");
   } catch(e) {
-    showToast("❌ Push failed: " + e.message);
+    showToast("Push failed: " + e.message);
     console.error("GitHub push error:", e);
   }
-  if (btn) { btn.disabled = false; btn.textContent = "⬆ Push to GitHub"; }
 }
 
 async function pushExcelToGitHub(excelBase64, fileName) {
@@ -1159,26 +1153,13 @@ function renderLivePanelFromHF(data) {
   if (!D) return;
   var body = document.getElementById("live-panel-body");
 
-  var now = new Date();
-  var istOffset = 5.5 * 60;
-  var utcMin = now.getUTCHours() * 60 + now.getUTCMinutes();
-  var istMin = (utcMin + istOffset) % (24 * 60);
-  var hoursElapsed = (istMin / 60).toFixed(1);
-
-  var html = '<div class="live-info">' +
-    '⚡ <b>Live tracker</b> — scraped from Google Maps via HuggingFace Docker.<br>' +
-    'Fetched at: <b>' + (data.triggered_at || "—").replace("T"," ").slice(0,19) + ' IST</b>. ' +
-    'Day so far: <b>' + hoursElapsed + ' hours</b> elapsed.' +
-    '<br><small style="color:var(--muted)">Click Refresh to re-scrape all 36 branches (takes ~2 min).</small>' +
-    '</div>';
-
   var totalToday = data.total_today || 0;
   var branches = data.branches || [];
   var activeBranches = branches.filter(function(b){return (b.today_count||0) > 0;}).length;
   var topEntry = branches.slice().sort(function(a,b){return (b.today_count||0)-(a.today_count||0);})[0];
   var topName = topEntry ? topEntry.name : "—";
 
-  html += '<div class="live-stat-row">' +
+  var html = '<div class="live-stat-row">' +
     '<div class="live-stat"><div class="live-stat-lbl">Total Today</div><div class="live-stat-val" style="color:var(--green)">'+totalToday+'</div></div>' +
     '<div class="live-stat"><div class="live-stat-lbl">Active Branches</div><div class="live-stat-val" style="color:var(--indigo)">'+activeBranches+'</div></div>' +
     '<div class="live-stat"><div class="live-stat-lbl">Top Branch</div><div class="live-stat-val" style="font-size:13px;color:var(--amber)">'+topName+'</div></div>' +
@@ -1218,16 +1199,13 @@ function renderLivePanelLoading() {
 
 function renderLivePanelStreaming() {
   var body = document.getElementById("live-panel-body");
-  return '<div class="live-info">' +
-    '⚡ <b>Live tracker</b> — streaming results from HuggingFace Docker.<br>' +
-    '<small style="color:var(--muted)">Each branch appears as it is scraped. Please wait.</small>' +
-    '</div>' +
-    '<div id="live-progress" style="font-size:12px;color:var(--muted);margin-bottom:12px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:9px">Scraping branch 0/36…</div>' +
+  return '<div id="live-progress" style="font-size:12px;color:var(--muted);margin-bottom:12px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;display:flex;align-items:center;gap:8px"><div class="spinner" style="width:14px;height:14px;border-width:2px"></div><span>Preparing scan…</span></div>' +
     '<div id="live-stats" class="live-stat-row">' +
     '<div class="live-stat"><div class="live-stat-lbl">Total Today</div><div class="live-stat-val" style="color:var(--green)" id="live-total-today">0</div></div>' +
     '<div class="live-stat"><div class="live-stat-lbl">Active Branches</div><div class="live-stat-val" style="color:var(--indigo)" id="live-active-count">0</div></div>' +
     '<div class="live-stat"><div class="live-stat-lbl">Top Branch</div><div class="live-stat-val" style="font-size:13px;color:var(--amber)" id="live-top-name">—</div></div>' +
     '</div>' +
+    '<div style="margin-bottom:12px"><button id="live-dl-btn" style="display:none" class="btn btn-green" onclick="downloadLiveExcel()">⬇ Download Excel</button></div>' +
     '<div id="live-agm-container"></div>';
 }
 
@@ -1249,16 +1227,11 @@ function renderLivePanelFallback() {
   var istMin = (utcMin + istOffset) % (24 * 60);
   var hoursElapsed = (istMin / 60).toFixed(1);
 
-  var html = '<div class="live-info">' +
-    '⚡ <b>Live tracker</b> — showing stored snapshot (HF Docker unavailable).<br>' +
-    'Day so far: <b>' + hoursElapsed + ' hours</b> elapsed. ' +
-    (hasToday ? '✅ Today\'s data available.' : '⏳ No today data.') +
-    '</div>';
-
   var source = hasToday ? todaySnap : (D.daily[selectedDate] || {});
   var totalLive = Object.values(source).reduce(function(a,b){return a+(b.daily_count||0);},0);
   var activeBranches = Object.values(source).filter(function(b){return(b.daily_count||0)>0;}).length;
-  html += '<div class="live-stat-row">' +
+
+  var html = '<div class="live-stat-row">' +
     '<div class="live-stat"><div class="live-stat-lbl">Total Today</div><div class="live-stat-val" style="color:var(--green)">'+totalLive+'</div></div>' +
     '<div class="live-stat"><div class="live-stat-lbl">Active Branches</div><div class="live-stat-val" style="color:var(--indigo)">'+activeBranches+'</div></div>' +
     '</div>';
@@ -1296,9 +1269,9 @@ async function liveRefresh() {
   var agmMap = {};
   var done = false;
 
-  function updateProgress(count) {
+  function updateProgress(count, name) {
     var el = document.getElementById("live-progress");
-    if (el) el.textContent = "Scraping branch " + count + "/" + branchCount + "…";
+    if (el) el.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px"></div><span>Scraping ' + (name || count + '/36') + '</span>';
   }
 
   function updateStats() {
@@ -1350,21 +1323,22 @@ async function liveRefresh() {
         if (d.done) {
           done = true;
           evtSource.close();
-          updateProgress(branchCount);
+          updateProgress(branchCount, null);
           updateStats();
           var pEl = document.getElementById("live-progress");
           if (pEl) {
             pEl.style.background = "rgba(5,150,105,.08)";
             pEl.style.borderColor = "rgba(5,150,105,.2)";
             pEl.style.color = "var(--green)";
-            pEl.textContent = "✅ Done — " + branchCount + " branches scraped. Total today: " + (d.total_today||0);
+            pEl.innerHTML = '<span style="font-size:14px">✓</span><span><b>Scan complete</b> — ' + (d.total_today||0) + ' reviews today</span>';
           }
           LIVE.hfData = d;
           btn.classList.remove("loading"); btn.textContent = "🔄 Refresh";
-          showToast("Live data fetched from HF Docker ✓");
+          var dlBtn = document.getElementById("live-dl-btn");
+          if (dlBtn) dlBtn.style.display = "inline-flex";
         } else {
           scrapedBranches.push(d);
-          updateProgress(scrapedBranches.length);
+          updateProgress(scrapedBranches.length, d.name);
           updateStats();
           addBranchToPanel(d);
         }
@@ -1403,19 +1377,45 @@ async function liveFallbackFetch(btn) {
   btn.classList.remove("loading"); btn.textContent = "🔄 Refresh";
 }
 
+function downloadLiveExcel() {
+  var data = LIVE.hfData;
+  if (!data || !data.branches || !data.branches.length) { showToast("No live data to download."); return; }
+  var today = new Date();
+  var dd = String(today.getDate()).padStart(2, '0');
+  var mm = String(today.getMonth() + 1).padStart(2, '0');
+  var yyyy = today.getFullYear();
+  var dateStr = dd + '-' + mm + '-' + yyyy;
+  var rows = [["Branch ID", "Branch Name", "AGM", "Total Reviews", "Today's Reviews"]];
+  data.branches.forEach(function(b) {
+    rows.push([b.id, b.name, b.agm, b.live_total || 0, b.today_count || 0]);
+  });
+  var csv = rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(","); }).join("\n");
+  var blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "Live_Reviews_" + dateStr + ".csv";
+  a.click();
+  showToast("Downloaded Live_Reviews_" + dateStr + ".csv");
+}
+
 /* ═══════════════════════════════════════════════════════════
    REVIEWS PANEL
 ═══════════════════════════════════════════════════════════ */
 function openRevPanel() {
   document.getElementById("rev-backdrop").classList.add("open");
-  if (!REV.data.length) loadRevData(selectedDate);
-  else renderRevPanel();
+  if (!REV.loadedDate) REV.loadedDate = selectedDate;
+  if (!REV.data.length) {
+    loadRevData(REV.loadedDate);
+  } else {
+    renderRevPanel();
+  }
 }
 function closeRevPanel() { document.getElementById("rev-backdrop").classList.remove("open"); }
 function revBdClick(e) { if(e.target===document.getElementById("rev-backdrop")) closeRevPanel(); }
 
 async function loadRevData(date) {
   REV.loadedDate = date;
+  REV.data = [];
   var body = document.getElementById("rev-panel-body");
   body.innerHTML = '<div class="loading"><div class="spinner"></div>Loading reviews…</div>';
   try {
@@ -1423,41 +1423,10 @@ async function loadRevData(date) {
     var r = await fetch(url);
     if (!r.ok) throw new Error("No data for " + date);
     REV.data = await r.json();
-    renderRevPanel();
   } catch(e) {
-    REV.data = generateReviewsFromDaily(date);
-    renderRevPanel();
+    REV.data = [];
   }
-}
-
-function generateReviewsFromDaily(date) {
-  if (!D || !D.daily || !D.daily[date]) return [];
-  var reviews = [];
-  var dayData = D.daily[date];
-  Object.keys(dayData).forEach(function(bid) {
-    var entry = dayData[bid];
-    var count = entry.daily_count || 0;
-    if (count <= 0) return;
-    var branch = D.branches ? D.branches[bid] : null;
-    var branchName = branch ? branch.name : "Branch " + bid;
-    var agm = branch ? branch.agm : "Unknown";
-    var rating = entry.star_rating || 4;
-    for (var i = 0; i < count; i++) {
-      reviews.push({
-        review_id: "gen_" + date + "_" + bid + "_" + i,
-        branch_id: parseInt(bid),
-        branch_name: branchName,
-        agm: agm,
-        author: "Google Reviewer",
-        rating: rating,
-        text: "Review #" + (i + 1) + " for " + branchName,
-        relative_date: date,
-        resolved_date: date,
-        deleted: false
-      });
-    }
-  });
-  return reviews;
+  renderRevPanel();
 }
 
 async function loadDeletedData(date) {
@@ -1499,7 +1468,7 @@ function renderRevPanel() {
   if (REV.tab === "browse") {
     var filtered = getFilteredRevs();
     if (!filtered.length) {
-      html += '<div class="rev-empty"><span style="font-size:28px">📭</span><span>No reviews match filters.</span></div>';
+      html += '<div class="rev-empty"><span style="font-size:28px">📭</span><span>No reviews for '+fmtDate(REV.loadedDate||"")+' yet.<br><small style="color:var(--muted)">Reviews appear after scraper runs overnight.</small></span></div>';
     } else {
       // Stats
       var neg = 0, pos = 0;
@@ -1685,29 +1654,16 @@ async function revLoadDeletedDate(date) {
 }
 
 async function revDelete(revId) {
-  if (!confirm("Hide this review from counts? It stays in history.")) return;
+  if (!confirm("Hide this review? It stays in history.")) return;
   REV.pendingDeletes.add(revId);
   var rv = REV.data.find(function(r){return r.review_id===revId;});
-  if (rv) {
-    rv.deleted = true;
-    if (D && D.daily && D.daily[REV.loadedDate] && D.daily[REV.loadedDate][String(rv.branch_id)]) {
-      var dd = D.daily[REV.loadedDate][String(rv.branch_id)];
-      if (dd.daily_count > 0) dd.daily_count--;
-    }
-  }
-  showToast("Review hidden. Save/Download to persist.");
+  if (rv) rv.deleted = true;
   renderRevPanel();
 }
 async function revRestore(revId) {
   REV.pendingDeletes.delete(revId);
   var rv = REV.data.find(function(r){return r.review_id===revId;});
-  if (rv) {
-    rv.deleted = false;
-    if (D && D.daily && D.daily[REV.loadedDate] && D.daily[REV.loadedDate][String(rv.branch_id)]) {
-      var dd = D.daily[REV.loadedDate][String(rv.branch_id)];
-      dd.daily_count = (dd.daily_count || 0) + 1;
-    }
-  }
+  if (rv) rv.deleted = false;
   renderRevPanel();
 }
 function pushRevsToLocal() {
