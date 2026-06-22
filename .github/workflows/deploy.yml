@@ -15,6 +15,6 @@ jobs:
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.sathya }}
-          accountId: ${{ secrets.cloudfare }}
+          apiToken: ${{ secrets.CLOUDFARE }}
+          accountId: ${{ secrets.SATHYA }}
           command: pages deploy . --project-name=sathya-reviews
