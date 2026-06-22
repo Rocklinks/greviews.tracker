@@ -3,7 +3,7 @@
     "1": {
       "id": 1,
       "name": "Tuticorin-1",
-      "agm": "Sivaperrumal",
+      "agm": "Sivaperumal",
       "overall": 6932,
       "star_rating": 4.9,
       "monthly": 10
@@ -11,7 +11,7 @@
     "2": {
       "id": 2,
       "name": "Tuticorin-2",
-      "agm": "Sivaperrumal",
+      "agm": "Sivaperumal",
       "overall": 6285,
       "star_rating": 4.8,
       "monthly": 8
@@ -19,7 +19,7 @@
     "3": {
       "id": 3,
       "name": "Thiruchendur-1",
-      "agm": "Sivaperrumal",
+      "agm": "Sivaperumal",
       "overall": 1223,
       "star_rating": 5.0,
       "monthly": 2
@@ -27,7 +27,7 @@
     "4": {
       "id": 4,
       "name": "Thisayanvilai-1",
-      "agm": "Sivaperrumal",
+      "agm": "Sivaperumal",
       "overall": 359,
       "star_rating": 5.0,
       "monthly": 4
@@ -35,7 +35,7 @@
     "5": {
       "id": 5,
       "name": "Eral-2",
-      "agm": "Sivaperrumal",
+      "agm": "Sivaperumal",
       "overall": 1084,
       "star_rating": 4.9,
       "monthly": 3
@@ -43,7 +43,7 @@
     "6": {
       "id": 6,
       "name": "Udankudi",
-      "agm": "Sivaperrumal",
+      "agm": "Sivaperumal",
       "overall": 1968,
       "star_rating": 4.9,
       "monthly": 2
@@ -251,7 +251,7 @@
     "32": {
       "id": 32,
       "name": "Virudhunagar",
-      "agm": "Venkatesh",
+      "agm": "Venkadesan",
       "overall": 2105,
       "star_rating": 4.8,
       "monthly": 1
@@ -259,7 +259,7 @@
     "33": {
       "id": 33,
       "name": "Virudhunagar-2",
-      "agm": "Venkatesh",
+      "agm": "Venkadesan",
       "overall": 1674,
       "star_rating": 4.9,
       "monthly": 6
@@ -267,7 +267,7 @@
     "34": {
       "id": 34,
       "name": "Aruppukottai",
-      "agm": "Venkatesh",
+      "agm": "Venkadesan",
       "overall": 2014,
       "star_rating": 4.8,
       "monthly": 4
@@ -275,7 +275,7 @@
     "35": {
       "id": 35,
       "name": "Aruppukottai-2",
-      "agm": "Venkatesh",
+      "agm": "Venkadesan",
       "overall": 922,
       "star_rating": 5.0,
       "monthly": 5

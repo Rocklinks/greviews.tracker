@@ -3,7 +3,7 @@
     "1": {
       "id": 1,
       "name": "Tuticorin-1",
-      "agm": "Sivaperrumal",
+      "agm": "Sivaperumal",
       "overall": 6969,
       "star_rating": 4.9,
       "monthly": 30
@@ -11,7 +11,7 @@
     "2": {
       "id": 2,
       "name": "Tuticorin-2",
-      "agm": "Sivaperrumal",
+      "agm": "Sivaperumal",
       "overall": 6316,
       "star_rating": 4.8,
       "monthly": 28
@@ -19,7 +19,7 @@
     "3": {
       "id": 3,
       "name": "Thiruchendur-1",
-      "agm": "Sivaperrumal",
+      "agm": "Sivaperumal",
       "overall": 1229,
       "star_rating": 5.0,
       "monthly": 8
@@ -27,7 +27,7 @@
     "4": {
       "id": 4,
       "name": "Thisayanvilai-1",
-      "agm": "Sivaperrumal",
+      "agm": "Sivaperumal",
       "overall": 358,
       "star_rating": 4.9,
       "monthly": 8
@@ -35,7 +35,7 @@
     "5": {
       "id": 5,
       "name": "Eral-2",
-      "agm": "Sivaperrumal",
+      "agm": "Sivaperumal",
       "overall": 1087,
       "star_rating": 4.9,
       "monthly": 8
@@ -43,7 +43,7 @@
     "6": {
       "id": 6,
       "name": "Udankudi",
-      "agm": "Sivaperrumal",
+      "agm": "Sivaperumal",
       "overall": 1972,
       "star_rating": 4.9,
       "monthly": 6
@@ -251,7 +251,7 @@
     "32": {
       "id": 32,
       "name": "Virudhunagar",
-      "agm": "Venkatesh",
+      "agm": "Venkadesan",
       "overall": 2112,
       "star_rating": 4.8,
       "monthly": 9
@@ -259,7 +259,7 @@
     "33": {
       "id": 33,
       "name": "Virudhunagar-2",
-      "agm": "Venkatesh",
+      "agm": "Venkadesan",
       "overall": 1692,
       "star_rating": 4.9,
       "monthly": 23
@@ -267,7 +267,7 @@
     "34": {
       "id": 34,
       "name": "Aruppukottai",
-      "agm": "Venkatesh",
+      "agm": "Venkadesan",
       "overall": 2025,
       "star_rating": 4.8,
       "monthly": 15
@@ -275,7 +275,7 @@
     "35": {
       "id": 35,
       "name": "Aruppukottai-2",
-      "agm": "Venkatesh",
+      "agm": "Venkadesan",
       "overall": 925,
       "star_rating": 5.0,
       "monthly": 8
@@ -283,7 +283,7 @@
     "36": {
       "id": 36,
       "name": "Sivakasi",
-      "agm": "Venkatesh",
+      "agm": "Venkadesan",
       "overall": 1191,
       "star_rating": 4.8,
       "monthly": 7

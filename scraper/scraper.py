@@ -8,13 +8,13 @@ MAX_CONCURRENT=4
 IST=timedelta(hours=5,minutes=30)
 
 BRANCHES=[
-    # Sivaperrumal
-    {"id":1,"name":"Tuticorin-1","place_id":"ChIJ5zJNoJfvAzsR-bJE_3bbNYw","agm":"Sivaperrumal"},
-    {"id":2,"name":"Tuticorin-2","place_id":"ChIJH6gY4-PvAzsRJ50skTlx3cs","agm":"Sivaperrumal"},
-    {"id":3,"name":"Thiruchendur-1","place_id":"ChIJeXA4vJKRAzsRBovAtv6lMuQ","agm":"Sivaperrumal"},
-    {"id":4,"name":"Thisayanvilai-1","place_id":"ChIJVWkvdfh_BDsRdvtimKCLS5Y","agm":"Sivaperrumal"},
-    {"id":5,"name":"Eral-2","place_id":"ChIJbwAA0KGMAzsRkQilW5PceeA","agm":"Sivaperrumal"},
-    {"id":6,"name":"Udankudi","place_id":"ChIJPQAAACyEAzsRgjznQ1GLom0","agm":"Sivaperrumal"},
+    # Sivaperumal
+    {"id":1,"name":"Tuticorin-1","place_id":"ChIJ5zJNoJfvAzsR-bJE_3bbNYw","agm":"Sivaperumal"},
+    {"id":2,"name":"Tuticorin-2","place_id":"ChIJH6gY4-PvAzsRJ50skTlx3cs","agm":"Sivaperumal"},
+    {"id":3,"name":"Thiruchendur-1","place_id":"ChIJeXA4vJKRAzsRBovAtv6lMuQ","agm":"Sivaperumal"},
+    {"id":4,"name":"Thisayanvilai-1","place_id":"ChIJVWkvdfh_BDsRdvtimKCLS5Y","agm":"Sivaperumal"},
+    {"id":5,"name":"Eral-2","place_id":"ChIJbwAA0KGMAzsRkQilW5PceeA","agm":"Sivaperumal"},
+    {"id":6,"name":"Udankudi","place_id":"ChIJPQAAACyEAzsRgjznQ1GLom0","agm":"Sivaperumal"},
     # Johnson
     {"id":7,"name":"Tirunelveli-1","place_id":"ChIJ2RU2NvQRBDsRq-Fw7IVwx7k","agm":"Johnson"},
     {"id":8,"name":"Valliyur-1","place_id":"ChIJcVNk6TtnBDsRBoP4zpExt5k","agm":"Johnson"},
@@ -44,12 +44,12 @@ BRANCHES=[
     {"id":29,"name":"Sattur-2","place_id":"ChIJNVVVVcHKBjsR7xMX97RFn8Q","agm":"Seenivasan"},
     {"id":30,"name":"Sankarankovil-1","place_id":"ChIJE1mKnhSXBjsRKMQ-9JKQf_c","agm":"Seenivasan"},
     {"id":31,"name":"Villathikullam","place_id":"ChIJi_wAkwVbATsRtFl3_V5rGrY","agm":"Seenivasan"},
-    # Venkatesh
-    {"id":32,"name":"Virudhunagar","place_id":"ChIJN3jzNJgsATsRCU3nrB5ntKE","agm":"Venkatesh"},
-    {"id":33,"name":"Virudhunagar-2","place_id":"ChIJPezaX7wtATsR9sHhFOG6A1c","agm":"Venkatesh"},
-    {"id":34,"name":"Aruppukottai","place_id":"ChIJy6qqqgYwATsRbcp-hXnoruM","agm":"Venkatesh"},
-    {"id":35,"name":"Aruppukottai-2","place_id":"ChIJY04wY58xATsRuoJSichVQQE","agm":"Venkatesh"},
-    {"id":36,"name":"Sivakasi","place_id":"ChIJI2JvEePOBjsREh8b-x4WF4U","agm":"Venkatesh"},
+    # Venkadesan
+    {"id":32,"name":"Virudhunagar","place_id":"ChIJN3jzNJgsATsRCU3nrB5ntKE","agm":"Venkadesan"},
+    {"id":33,"name":"Virudhunagar-2","place_id":"ChIJPezaX7wtATsR9sHhFOG6A1c","agm":"Venkadesan"},
+    {"id":34,"name":"Aruppukottai","place_id":"ChIJy6qqqgYwATsRbcp-hXnoruM","agm":"Venkadesan"},
+    {"id":35,"name":"Aruppukottai-2","place_id":"ChIJY04wY58xATsRuoJSichVQQE","agm":"Venkadesan"},
+    {"id":36,"name":"Sivakasi","place_id":"ChIJI2JvEePOBjsREh8b-x4WF4U","agm":"Venkadesan"},
 ]
 
 def load_data():
