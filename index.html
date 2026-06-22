@@ -361,13 +361,12 @@ tbody td{padding:11px 14px;white-space:nowrap}
 <div class="rev-panel-backdrop" id="rev-backdrop" onclick="revBdClick(event)">
   <div class="rev-panel">
     <div class="panel-hdr">
-      <span style="font-size:18px">⭐</span>
-      <span class="panel-title">Individual Reviews</span>
+      <img src="https://www.sathya.store/new_frontend/assets/img/sathya.webp" style="height:22px">
+      <span class="panel-title">Reviews</span>
       <button class="modal-close" onclick="closeRevPanel()" style="flex-shrink:0">✕</button>
     </div>
     <div class="rev-tabs" id="rev-tabs-bar">
-      <button class="rev-tab active" onclick="revSwitchTab('browse',this)">💬 Browse</button>
-      <button class="rev-tab" onclick="revSwitchTab('agm',this)">👤 By AGM</button>
+      <button class="rev-tab active" onclick="revSwitchTab('browse',this)">💬 Reviews</button>
       <button class="rev-tab" id="del-tab-btn" onclick="revSwitchTab('deleted',this)">🗑 Deleted</button>
     </div>
     <div class="panel-body" id="rev-panel-body">
@@ -1217,6 +1216,21 @@ function renderLivePanelLoading() {
   body.innerHTML = '<div class="loading"><div class="spinner"></div>Scraping 36 branches from Google Maps…<br><small style="color:var(--muted)">This may take 1-2 minutes. Please wait.</small></div>';
 }
 
+function renderLivePanelStreaming() {
+  var body = document.getElementById("live-panel-body");
+  return '<div class="live-info">' +
+    '⚡ <b>Live tracker</b> — streaming results from HuggingFace Docker.<br>' +
+    '<small style="color:var(--muted)">Each branch appears as it is scraped. Please wait.</small>' +
+    '</div>' +
+    '<div id="live-progress" style="font-size:12px;color:var(--muted);margin-bottom:12px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:9px">Scraping branch 0/36…</div>' +
+    '<div id="live-stats" class="live-stat-row">' +
+    '<div class="live-stat"><div class="live-stat-lbl">Total Today</div><div class="live-stat-val" style="color:var(--green)" id="live-total-today">0</div></div>' +
+    '<div class="live-stat"><div class="live-stat-lbl">Active Branches</div><div class="live-stat-val" style="color:var(--indigo)" id="live-active-count">0</div></div>' +
+    '<div class="live-stat"><div class="live-stat-lbl">Top Branch</div><div class="live-stat-val" style="font-size:13px;color:var(--amber)" id="live-top-name">—</div></div>' +
+    '</div>' +
+    '<div id="live-agm-container"></div>';
+}
+
 function renderLivePanelError(msg) {
   var body = document.getElementById("live-panel-body");
   body.innerHTML = '<div class="rev-warn"><span>⚠️</span><div><b>Failed to fetch live data</b><br>'+escH(msg)+'<br><br>Falling back to stored snapshot…</div></div>';
@@ -1273,7 +1287,105 @@ function renderLivePanelFallback() {
 async function liveRefresh() {
   var btn = document.getElementById("live-refresh-btn");
   btn.classList.add("loading"); btn.textContent = "⏳ Scraping…";
-  renderLivePanelLoading();
+
+  var body = document.getElementById("live-panel-body");
+  body.innerHTML = renderLivePanelStreaming();
+
+  var branchCount = D ? Object.keys(D.branches||{}).length : 36;
+  var scrapedBranches = [];
+  var agmMap = {};
+  var done = false;
+
+  function updateProgress(count) {
+    var el = document.getElementById("live-progress");
+    if (el) el.textContent = "Scraping branch " + count + "/" + branchCount + "…";
+  }
+
+  function updateStats() {
+    var totalToday = scrapedBranches.reduce(function(a,b){return a+(b.today_count||0);},0);
+    var activeCount = scrapedBranches.filter(function(b){return (b.today_count||0)>0;}).length;
+    var topEntry = scrapedBranches.slice().sort(function(a,b){return (b.today_count||0)-(a.today_count||0);})[0];
+    var topName = topEntry ? topEntry.name : "—";
+    var tEl = document.getElementById("live-total-today");
+    var aEl = document.getElementById("live-active-count");
+    var nEl = document.getElementById("live-top-name");
+    if (tEl) tEl.textContent = totalToday;
+    if (aEl) aEl.textContent = activeCount;
+    if (nEl) nEl.textContent = topName;
+  }
+
+  function addBranchToPanel(br) {
+    var agm = br.agm || "Unknown";
+    if (!agmMap[agm]) agmMap[agm] = {total:0, branches:[]};
+    agmMap[agm].total += (br.today_count||0);
+    agmMap[agm].branches.push({name:br.name, today:br.today_count||0, live_total:br.live_total||0});
+    var container = document.getElementById("live-agm-container");
+    if (!container) return;
+    // Rebuild AGM sections
+    var html = "";
+    Object.entries(agmMap).sort(function(a,b){return b[1].total-a[1].total;}).forEach(function(e) {
+      var a = e[0], d = e[1];
+      var cs = AGM_COLORS[a]||{bg:"rgba(0,0,0,.06)",text:"var(--text2)"};
+      html += '<div class="live-agm-section">' +
+        '<div class="live-agm-hdr" style="background:'+cs.bg+';color:'+cs.text+'"><span>'+a+'</span><span style="font-family:var(--mono);font-weight:700">+'+d.total+'</span></div>';
+      d.branches.sort(function(a,b){return b.today-a.today;}).forEach(function(br2) {
+        html += '<div class="live-branch-row">' +
+          '<span class="live-branch-name">'+br2.name+'</span>' +
+          '<span><span class="live-count" style="color:'+(br2.today>0?'var(--green)':'var(--muted)')+'">+'+br2.today+'</span>' +
+          '<span class="live-since">(total: '+fmt(br2.live_total)+')</span></span>' +
+          '</div>';
+      });
+      html += '</div>';
+    });
+    container.innerHTML = html;
+  }
+
+  try {
+    var sseUrl = HF_LIVE_URL.replace('/live','/live-stream');
+    var evtSource = new EventSource(sseUrl);
+
+    evtSource.onmessage = function(event) {
+      try {
+        var d = JSON.parse(event.data);
+        if (d.done) {
+          done = true;
+          evtSource.close();
+          updateProgress(branchCount);
+          updateStats();
+          var pEl = document.getElementById("live-progress");
+          if (pEl) {
+            pEl.style.background = "rgba(5,150,105,.08)";
+            pEl.style.borderColor = "rgba(5,150,105,.2)";
+            pEl.style.color = "var(--green)";
+            pEl.textContent = "✅ Done — " + branchCount + " branches scraped. Total today: " + (d.total_today||0);
+          }
+          LIVE.hfData = d;
+          btn.classList.remove("loading"); btn.textContent = "🔄 Refresh";
+          showToast("Live data fetched from HF Docker ✓");
+        } else {
+          scrapedBranches.push(d);
+          updateProgress(scrapedBranches.length);
+          updateStats();
+          addBranchToPanel(d);
+        }
+      } catch(e) { console.error("SSE parse error:", e); }
+    };
+
+    evtSource.onerror = function() {
+      evtSource.close();
+      if (!done) {
+        console.error("SSE connection failed, falling back to /live");
+        liveFallbackFetch(btn);
+      }
+    };
+
+  } catch(e) {
+    console.error("SSE setup failed:", e);
+    liveFallbackFetch(btn);
+  }
+}
+
+async function liveFallbackFetch(btn) {
   try {
     var ctrl = new AbortController();
     var timeout = setTimeout(function(){ ctrl.abort(); }, 150000);
@@ -1366,27 +1478,27 @@ function renderRevPanel() {
         '<span class="badge b-indigo">'+pos+' positive (4-5★)</span>' +
         (neg>0?'<span class="badge b-rose">'+neg+' negative (1-3★)</span>':'') +
         '</div>';
-      html += filtered.map(function(r){return buildRevCard(r);}).join("");
-    }
-  } else if (REV.tab === "agm") {
-    var agmRevMap = {};
-    getFilteredRevs().forEach(function(r) {
-      if (!agmRevMap[r.agm]) agmRevMap[r.agm] = [];
-      agmRevMap[r.agm].push(r);
-    });
-    if (!Object.keys(agmRevMap).length) {
-      html += '<div class="rev-empty"><span>No reviews match filters.</span></div>';
-    } else {
-      Object.entries(agmRevMap).sort().forEach(function(e) {
-        var agm = e[0], revs = e[1];
-        var cs = AGM_COLORS[agm]||{bg:"rgba(0,0,0,.06)",text:"var(--text2)"};
-        var avgRating = (revs.reduce(function(a,r){return a+r.rating;},0)/revs.length).toFixed(1);
-        html += '<div style="margin-bottom:16px">' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:9px;margin-bottom:8px;background:'+cs.bg+'">' +
-          '<span style="font-weight:700;color:'+cs.text+'">'+agm+'</span>' +
-          '<span style="font-size:11px;color:'+cs.text+'"><b>'+revs.length+'</b> reviews · avg <b>'+avgRating+'★</b></span>' +
-          '</div>' + revs.map(function(r){return buildRevCard(r);}).join("") + '</div>';
-      });
+      // If AGM filter is selected, group by AGM; otherwise flat list
+      if (REV.filterAgm) {
+        var agmGroups = {};
+        filtered.forEach(function(r) {
+          var agm = r.agm || "Unknown";
+          if (!agmGroups[agm]) agmGroups[agm] = [];
+          agmGroups[agm].push(r);
+        });
+        Object.entries(agmGroups).sort().forEach(function(e) {
+          var agm = e[0], revs = e[1];
+          var cs = AGM_COLORS[agm]||{bg:"rgba(0,0,0,.06)",text:"var(--text2)"};
+          var avgRating = (revs.reduce(function(a,r){return a+r.rating;},0)/revs.length).toFixed(1);
+          html += '<div style="margin-bottom:16px">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:9px;margin-bottom:8px;background:'+cs.bg+'">' +
+            '<span style="font-weight:700;color:'+cs.text+'">'+agm+'</span>' +
+            '<span style="font-size:11px;color:'+cs.text+'"><b>'+revs.length+'</b> reviews · avg <b>'+avgRating+'★</b></span>' +
+            '</div>' + revs.map(function(r){return buildRevCard(r);}).join("") + '</div>';
+        });
+      } else {
+        html += filtered.map(function(r){return buildRevCard(r);}).join("");
+      }
     }
   } else {
     // Load from HF deleted/ if not loaded yet
