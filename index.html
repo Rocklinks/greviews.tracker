@@ -437,7 +437,6 @@ tbody td{padding:11px 14px;white-space:nowrap}
 
 <div id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════
    CONFIG
@@ -446,36 +445,21 @@ var HF_REPO = "RocklinKS/reviews";
 var HF_BASE = "https://huggingface.co/datasets/" + HF_REPO + "/resolve/main/data/";
 var HF_WRITE_TOKEN = ""; // Set via Secrets or leave blank for read-only
 var HF_SPACE_URL = "https://rocklinks-sathya-live.hf.space";
-var GITHUB_REPO = "Rocklinks/greviews.tracker/";
+var GITHUB_REPO = "Rocklinks/greviews.tracker";
 var GITHUB_PAT  = "";
 var DASHBOARD_PASS = "prame26@";
-var EXCEL_URL = "./data/reviews.xlsx";
-
-var AGM_MAP = {
-  "Ambasamudram-1":"Johnson","Anjugramam-1":"Johnson","Aruppukottai":"Venkadesan",
-  "Aruppukottai-2":"Venkadesan","Colachel-1":"Jeeva","Eral-2":"Sivaperumal",
-  "Karungal-1":"Jeeva","Kayathar-1":"Seenivasan","Kovilpatti":"Seenivasan",
-  "Kulasekharam-1":"Jeeva","Marthandam":"Jeeva","Monday Market":"Jeeva",
-  "Nagercoil":"Jeeva","Paramakudi":"Seenivasan","Puliyankudi-1":"Muthuselvam",
-  "Rajapalayam":"Muthuselvam","Ramnad":"Seenivasan","Sankarankovil-1":"Seenivasan",
-  "Sattur-2":"Seenivasan","Sayalkudi-1":"Seenivasan","Sengottai-1":"Muthuselvam",
-  "Sivakasi":"Venkadesan","Surandai-1":"Muthuselvam","Thenkasi":"Muthuselvam",
-  "Thenkasi-2":"Muthuselvam","Thiruchendur-1":"Sivaperumal","Thisayanvilai-1":"Sivaperumal",
-  "Thuckalay-1":"Jeeva","Tirunelveli-1":"Johnson","Tuticorin-1":"Sivaperumal",
-  "Tuticorin-2":"Sivaperumal","Udankudi":"Sivaperumal","Valliyur-1":"Johnson",
-  "Villathikullam":"Seenivasan","Virudhunagar":"Venkadesan","Virudhunagar-2":"Venkadesan"
-};
+var DATA_JSON_URL = "./docs/data/reviews.json";
 
 /* ═══════════════════════════════════════════════════════════
    AGM CONFIG
 ═══════════════════════════════════════════════════════════ */
 var AGM_COLORS = {
-  "Sivaperumal": {bg:"rgba(2,132,199,.12)",  text:"#0284c7", bar:"#0284c7"},
+  "Sivaperrumal": {bg:"rgba(2,132,199,.12)",  text:"#0284c7", bar:"#0284c7"},
   "Johnson":      {bg:"rgba(79,70,229,.12)",  text:"#4f46e5", bar:"#4f46e5"},
   "Jeeva":        {bg:"rgba(5,150,105,.12)",  text:"#059669", bar:"#059669"},
   "Seenivasan":   {bg:"rgba(217,119,6,.12)",  text:"#d97706", bar:"#d97706"},
   "Muthuselvam":  {bg:"rgba(124,58,237,.12)", text:"#7c3aed", bar:"#7c3aed"},
-  "Venkadesan":    {bg:"rgba(225,29,72,.12)",  text:"#e11d48", bar:"#e11d48"},
+  "Venkatesh":    {bg:"rgba(225,29,72,.12)",  text:"#e11d48", bar:"#e11d48"},
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -489,10 +473,9 @@ var modalFmt = 'xls', modalMode = 'single', selectedAgms = new Set(['__all__']);
 // Reviews panel state
 var REV = {
   tab: "browse",
-  deletedData: null,
+  deletedData: [],
   deletedDate: null,
-  data: [],         // individual reviews loaded from HF
-  deletedData: [],  // deleted reviews loaded from HF deleted/YYYY-MM-DD.json
+  data: [],
   loadedDate: null,
   filterBranch: "",
   filterAgm: "",
@@ -523,58 +506,14 @@ function tickClock() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   LOAD DATA — parses Excel directly in browser
+   LOAD DATA — reads reviews.json from scraper output
 ═══════════════════════════════════════════════════════════ */
 async function loadData() {
   try {
-    var r = await fetch(EXCEL_URL + "?t=" + Date.now());
+    var r = await fetch(DATA_JSON_URL + "?t=" + Date.now());
     if (!r.ok) throw new Error("HTTP " + r.status);
-    var ab = await r.arrayBuffer();
-    var wb = XLSX.read(ab, {type:"array"});
-    var ws = wb.Sheets["Reviews"];
-    if (!ws) throw new Error("Reviews sheet not found");
-    var rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
-    var hdr = rows[2];
-    var dataRows = rows.slice(3).filter(function(r) { return r[0]; });
-    var branches = {}, daily = {};
-    var month = null, year = null;
-    for (var ci = 4; ci < hdr.length; ci++) {
-      var hv = hdr[ci];
-      if (hv === null || hv === undefined) continue;
-      var dateKey = null;
-      if (hv instanceof Date) {
-        year = hv.getFullYear(); month = hv.getMonth();
-        dateKey = hv.toISOString().slice(0,10);
-      } else if (typeof hv === "number" && year !== null) {
-        var dt = new Date(year, month, hv);
-        dateKey = dt.toISOString().slice(0,10);
-      } else if (typeof hv === "string" && hv.match(/^\d{4}-\d{2}-\d{2}/)) {
-        dateKey = hv.slice(0,10);
-        var parts = dateKey.split("-");
-        year = parseInt(parts[0]); month = parseInt(parts[1]) - 1;
-      }
-      if (!dateKey) continue;
-      if (!daily[dateKey]) daily[dateKey] = {};
-      for (var ri = 0; ri < dataRows.length; ri++) {
-        var row = dataRows[ri];
-        var bid = String(ri + 1);
-        var count = parseInt(row[ci]) || 0;
-        if (count > 0) daily[dateKey][bid] = {daily_count: count};
-      }
-    }
-    for (var ri = 0; ri < dataRows.length; ri++) {
-      var row = dataRows[ri];
-      var bid = String(ri + 1);
-      var name = String(row[0] || "").trim();
-      var starStr = String(row[1] || "0").replace("★","");
-      var star = parseFloat(starStr) || 0;
-      var overall = parseInt(row[2]) || 0;
-      branches[bid] = {
-        id: bid, name: name, agm: AGM_MAP[name] || "Unknown",
-        star: star, overall: overall, place_id: ""
-      };
-    }
-    D = {branches: branches, daily: daily, last_updated: new Date().toISOString()};
+    D = await r.json();
+    if (!D.branches || !Object.keys(D.branches).length) throw new Error("No branch data");
     if (!selectedRange.length) {
       var dates = Object.keys(D.daily || {}).sort();
       var latest = dates.length ? dates[dates.length - 1] : isoToday();
