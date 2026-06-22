@@ -13,9 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Create Cloudflare Pages project (if needed)
-        run: npx wrangler pages project create sathya-reviews --production-branch=main --account-id=${{ secrets.SATHYA }} || true
+        run: npx wrangler pages project create sathya-reviews --production-branch=main || true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFARE }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.SATHYA }}
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
