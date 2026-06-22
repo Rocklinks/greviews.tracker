@@ -441,12 +441,7 @@ tbody td{padding:11px 14px;white-space:nowrap}
 /* ═══════════════════════════════════════════════════════════
    CONFIG
 ═══════════════════════════════════════════════════════════ */
-var HF_REPO = "RocklinKS/reviews";
-var HF_BASE = "https://huggingface.co/datasets/" + HF_REPO + "/resolve/main/data/";
-var HF_WRITE_TOKEN = ""; // Set via Secrets or leave blank for read-only
-var HF_SPACE_URL = "https://rocklinks-sathya-live.hf.space";
 var GITHUB_REPO = "Rocklinks/greviews.tracker";
-var GITHUB_PAT  = "";
 var DASHBOARD_PASS = "prame26@";
 var DATA_JSON_URL = "./docs/data/reviews.json";
 
@@ -840,19 +835,14 @@ function buildEditView() {
       '<td><input class="inline-edit" id="dc-'+bid+'" type="number" value="'+dc+'" onchange="onEditChange(\'dc\',\''+bid+'\',this.value,\''+prevSnap+'\',\''+prevMo+'\')" style="width:70px"></td>' +
       '<td><input class="inline-edit" id="mo-'+bid+'" type="number" min="0" value="'+mo+'" onchange="onEditChange(\'mo\',\''+bid+'\',this.value,\''+prevSnap+'\',\''+prevMo+'\')" style="width:70px"></td></tr>';
   }).join('');
-  var ghReady = GITHUB_REPO && GITHUB_PAT;
   return '<div class="section"><div class="section-hdr"><span class="section-title">✏️ Edit Data</span>' +
     '<div class="ctrls"><label style="font-size:13px;font-weight:500;color:var(--text2)">Date:</label><select class="fsel" onchange="editSwitchDate(this.value)">'+dateOpts+'</select>' +
     '<button class="btn btn-primary" onclick="saveEdits()">✓ Save</button>' +
-    (ghReady
-      ? '<button class="btn btn-green" onclick="pushToGitHub()">🚀 Save to GitHub</button>'
-      : '<button class="btn btn-green" onclick="downloadEditedJSON()">⬇ Download JSON</button>') +
+    '<button class="btn btn-green" onclick="downloadEditedJSON()">⬇ Download JSON</button>' +
     '<label class="btn" style="border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer" title="Upload Excel to update counts">📥 Upload Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)"></label>' +
     '</div></div>' +
     '<div class="edit-warning"><span>ℹ️</span><div>' +
-    (ghReady
-      ? '<b>GitHub connected.</b> Edit → Save → Save to GitHub. Changes live in ~30 seconds.'
-      : '<b>Set GITHUB_REPO + GITHUB_PAT</b> in index.html to enable one-click save. Or: Edit → Save → Download JSON → upload manually.') +
+    '<b>Edit → Save → Download JSON.</b> Upload the file to <code>docs/data/reviews.json</code> on GitHub to publish.' +
     '<br>'+(prevDate?'Baseline: <b>'+fmtDate(prevDate)+'</b>':'<span style="color:var(--amber)">No previous date.</span>')+'</div></div>' +
     '<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Branch</th><th>AGM</th><th>⭐</th><th>Overall</th><th>'+fmtDateShort(editDate)+' Daily</th><th>Monthly</th></tr></thead><tbody>'+rows+'</tbody></table></div>' +
     '<div style="padding:10px 18px;background:var(--surface2);border-top:1px solid var(--border);font-size:12px;color:var(--muted)">Editing: <b>'+fmtDate(editDate)+'</b></div></div>';
@@ -910,24 +900,8 @@ function downloadEditedJSON() {
   a.download='reviews.json'; a.click(); showToast('Downloaded!');
 }
 
-async function pushToGitHub() {
-  if (!checkPass()) return;
-  if (!GITHUB_REPO||!GITHUB_PAT){showToast('Set GITHUB_REPO + GITHUB_PAT first.');return;}
-  showToast('Pushing to GitHub...');
-  try {
-    var infoR=await fetch('https://api.github.com/repos/'+GITHUB_REPO+'/contents/docs/data/reviews.json',
-      {headers:{'Authorization':'Bearer '+GITHUB_PAT}});
-    var sha='';
-    if(infoR.ok){var info=await infoR.json();sha=info.sha||'';}
-    var content=btoa(unescape(encodeURIComponent(JSON.stringify(D,null,2))));
-    var body={message:'manual edit '+new Date().toISOString().slice(0,10),content:content};
-    if(sha) body.sha=sha;
-    var r=await fetch('https://api.github.com/repos/'+GITHUB_REPO+'/contents/docs/data/reviews.json',
-      {method:'PUT',headers:{'Authorization':'Bearer '+GITHUB_PAT,'Content-Type':'application/json'},
-       body:JSON.stringify(body)});
-    if(r.ok) showToast('Saved to GitHub! Live in ~30 seconds.');
-    else{var er=await r.json();showToast('GitHub error: '+(er.message||r.status));}
-  }catch(e){showToast('Push failed: '+e.message);}
+function pushToGitHub() {
+  downloadEditedJSON();
 }
 
 function importExcel(input) {
@@ -1037,14 +1011,10 @@ function renderLivePanel() {
     '⚡ <b>Live tracker</b> shows reviews counted since <b>12:00 AM IST today</b>.<br>' +
     'Day so far: <b>' + hoursElapsed + ' hours</b> elapsed. ' +
     (hasToday ? '✅ Today\'s scrape data available.' : '⏳ Scraper runs at 11:50 PM IST — showing last available snapshot.') +
-    '<br><small style="color:var(--muted)">Click Refresh to fetch latest counts from HuggingFace.</small>' +
+    '<br><small style="color:var(--muted)">Click Refresh to reload from scraper JSON.</small>' +
     '</div>';
 
   // Stats row
-  // Use live scraper result if available
-  if (LIVE.data && LIVE.data.branches && LIVE.data.branches.length) {
-    renderLivePanelFromHF(); return;
-  }
   var source = hasToday ? todaySnap : (D.daily[selectedDate] || {});
   var totalLive = Object.values(source).reduce(function(a,b){return a+(b.daily_count||0);},0);
   var activeBranches = Object.values(source).filter(function(b){return(b.daily_count||0)>0;}).length;
@@ -1085,31 +1055,12 @@ function renderLivePanel() {
 
 async function liveRefresh() {
   var btn = document.getElementById("live-refresh-btn");
-  btn.classList.add("loading"); btn.textContent = "⏳ Fetching…";
-
-  // Try HF Space /live endpoint first
-  try {
-    var r = await fetch(HF_SPACE_URL + "/live?t=" + Date.now());
-    if (r.ok) {
-      var ct = r.headers.get("content-type") || "";
-      if (ct.includes("json")) {
-        var ld = await r.json();
-        if (ld.branches && ld.branches.length) {
-          LIVE.data = ld;
-          renderLivePanelFromHF();
-          btn.classList.remove("loading"); btn.textContent = "🔄 Refresh";
-          showToast("Live data updated ✓ " + (ld.total_new_today || ld.total_today || 0) + " new reviews today");
-          return;
-        }
-      }
-    }
-  } catch(e) {}
-
-  // Fallback: show today's Excel data
+  btn.classList.add("loading"); btn.textContent = "⏳ Loading…";
+  await loadData();
   LIVE.data = {};
   renderLivePanel();
   btn.classList.remove("loading"); btn.textContent = "🔄 Refresh";
-  showToast("Showing today's snapshot from Excel (HF Space /live unavailable)");
+  showToast("Data refreshed from scraper JSON ✓");
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1128,7 +1079,7 @@ async function loadRevData(date) {
   var body = document.getElementById("rev-panel-body");
   body.innerHTML = '<div class="loading"><div class="spinner"></div>Loading reviews…</div>';
   try {
-    var url = "https://rocklinks.github.io/new-scrape-rev/docs/data/reviews_detail/" + date + ".json?t=" + Date.now();
+    var url = "./docs/data/reviews_detail/" + date + ".json?t=" + Date.now();
     var r = await fetch(url);
     if (!r.ok) throw new Error("No data for " + date);
     REV.data = await r.json();
@@ -1140,7 +1091,7 @@ async function loadRevData(date) {
 
 async function loadDeletedData(date) {
   try {
-    var url = "https://rocklinks.github.io/new-scrape-rev/docs/data/reviews_detail/deleted_" + date + ".json?t=" + Date.now();
+    var url = "./docs/data/reviews_detail/deleted_" + date + ".json?t=" + Date.now();
     var r = await fetch(url);
     if (r.ok) { REV.deletedData = await r.json(); }
     else { REV.deletedData = []; }
@@ -1307,9 +1258,9 @@ async function revBuildDeletedTab(html, body) {
     body.innerHTML = html; return;
   }
 
-  body.innerHTML = html + '<div class="loading"><div class="spinner"></div>Loading deleted reviews from HuggingFace…</div>';
+  body.innerHTML = html + '<div class="loading"><div class="spinner"></div>Loading deleted reviews…</div>';
   try {
-    var url = "https://huggingface.co/datasets/"+HF_REPO+"/resolve/main/deleted/"+viewDate+".json?t="+Date.now();
+    var url = "./docs/data/reviews_detail/deleted_"+viewDate+".json?t="+Date.now();
     var r = await fetch(url);
     if (!r.ok) throw new Error("none");
     REV.deletedData = await r.json();
@@ -1367,29 +1318,21 @@ async function revDelete(revId) {
   REV.pendingDeletes.add(revId);
   var rv = REV.data.find(function(r){return r.review_id===revId;});
   if (rv) rv.deleted = true;
-  if (HF_WRITE_TOKEN) await pushRevsToHF();
-  else showToast("Marked locally. Add HF_WRITE_TOKEN to persist.");
+  showToast("Marked locally. Download and re-upload to persist.");
   renderRevPanel();
 }
 async function revRestore(revId) {
   REV.pendingDeletes.delete(revId);
   var rv = REV.data.find(function(r){return r.review_id===revId;});
   if (rv) rv.deleted = false;
-  if (HF_WRITE_TOKEN) await pushRevsToHF();
   renderRevPanel();
 }
-async function pushRevsToHF() {
-  if (!HF_WRITE_TOKEN || !REV.loadedDate) return;
-  try {
-    var content = btoa(unescape(encodeURIComponent(JSON.stringify(REV.data,null,2))));
-    var res = await fetch("https://huggingface.co/api/datasets/"+HF_REPO+"/commit/main", {
-      method: "POST",
-      headers: {"Authorization":"Bearer "+HF_WRITE_TOKEN,"Content-Type":"application/json"},
-      body: JSON.stringify({summary:"update "+REV.loadedDate, files:[{path:"data/"+REV.loadedDate+".json", content:content}]})
-    });
-    if (res.ok) showToast("Saved to HuggingFace ✓");
-    else showToast("HF save failed ("+res.status+")");
-  } catch(e) { showToast("HF error: "+e.message); }
+function pushRevsToLocal() {
+  if (!REV.loadedDate || !REV.data.length) return;
+  var blob = new Blob([JSON.stringify(REV.data,null,2)], {type:"application/json"});
+  var a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+  a.download = REV.loadedDate + ".json"; a.click();
+  showToast("Downloaded " + REV.loadedDate + ".json — upload to docs/data/reviews_detail/");
 }
 function revSetFilter(key,val) {
   REV["filter"+key.charAt(0).toUpperCase()+key.slice(1)] = val;
@@ -1684,43 +1627,6 @@ function escH(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").rep
 var tTimer=null;
 function showToast(msg){var t=document.getElementById("toast");t.innerHTML=msg;t.classList.add("show");if(tTimer)clearTimeout(tTimer);tTimer=setTimeout(function(){t.classList.remove("show");},3500);}
 
-
-function renderLivePanelFromHF() {
-  var ld = LIVE.data;
-  var body = document.getElementById("live-panel-body");
-  var html = '<div class="live-info">⚡ Live data from HF · Triggered: <b>' +
-    (ld.triggered_at||"").replace("T"," ").slice(0,16) + ' IST</b><br>' +
-    'Compared against: <b>' + ld.compared_against + '</b> fingerprints · ' +
-    '<b style="color:var(--green)">' + ld.total_new_today + ' new reviews today</b></div>';
-
-  // Stats
-  var active = ld.branches.filter(function(b){return b.new_today>0;}).length;
-  var top = ld.branches.slice().sort(function(a,b){return b.new_today-a.new_today;})[0];
-  html += '<div class="live-stat-row">' +
-    '<div class="live-stat"><div class="live-stat-lbl">Total Today</div><div class="live-stat-val" style="color:var(--green)">'+ld.total_new_today+'</div></div>' +
-    '<div class="live-stat"><div class="live-stat-lbl">Active Branches</div><div class="live-stat-val" style="color:var(--indigo)">'+active+'</div></div>' +
-    '<div class="live-stat"><div class="live-stat-lbl">Top Branch</div><div class="live-stat-val" style="font-size:13px;color:var(--amber)">'+(top?top.branch_name:"—")+'</div></div>' +
-    '</div>';
-
-  // AGM grouping
-  var agmMap = {};
-  ld.branches.forEach(function(b) {
-    if (!agmMap[b.agm]) agmMap[b.agm] = {total:0, branches:[]};
-    agmMap[b.agm].total += b.new_today;
-    agmMap[b.agm].branches.push(b);
-  });
-  Object.entries(agmMap).sort(function(a,b){return b[1].total-a[1].total;}).forEach(function(e) {
-    var agm=e[0], d=e[1];
-    var cs = AGM_COLORS[agm]||{bg:"rgba(0,0,0,.06)",text:"var(--text2)"};
-    html += '<div class="live-agm-section"><div class="live-agm-hdr" style="background:'+cs.bg+';color:'+cs.text+'"><span>'+agm+'</span><span style="font-family:var(--mono);font-weight:700">+'+d.total+'</span></div>';
-    d.branches.sort(function(a,b){return b.new_today-a.new_today;}).forEach(function(br){
-      html += '<div class="live-branch-row"><span class="live-branch-name">'+br.branch_name+'</span>' +
-        '<span class="live-count" style="color:'+(br.new_today>0?'var(--green)':'var(--muted)')+'">+'+br.new_today+'</span></div>';
-    });
-    html += '</div>';
-  });
-  body.innerHTML = html;
-}
 
 document.addEventListener("keydown",function(e){
   if(e.key==="Escape"){

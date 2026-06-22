@@ -1,0 +1,25 @@
+name: Save Review Data
+on:
+  workflow_dispatch:
+    inputs:
+      content:
+        description: 'JSON content for reviews.json'
+        required: true
+        type: string
+
+jobs:
+  save:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Save reviews.json
+        run: printf '%s' '${{ inputs.content }}' > docs/data/reviews.json
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/data/reviews.json
+          git diff --staged --quiet || git commit -m "manual edit $(date -u +%Y-%m-%d)"
+          git push
