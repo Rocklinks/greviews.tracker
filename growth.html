@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Growth Report · Sathya</title>
+<link rel="icon" type="image/webp" href="https://www.sathya.store/favicon.webp">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+/* ── SWISS MODERNISM 2.0 × EXECUTIVE DASHBOARD ── */
+/* Skill: Swiss grid + clean white + Fira family + single red accent */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  /* Swiss Modernism palette — white bg, black ink, single accent */
+  --bg:       #F8FAFC;
+  --sur:      #FFFFFF;
+  --sur2:     #F1F5F9;
+  --bdr:      #E2E8F0;
+  --bdr2:     #CBD5E1;
+
+  /* Typography — high contrast */
+  --tx:       #0F172A;
+  --tx2:      #475569;
+  --tx3:      #94A3B8;
+
+  /* Single brand accent — Sathya red */
+  --red:      #DC2626;
+  --red-h:    #B91C1C;
+  --red-pale: #FEF2F2;
+  --red-bdr:  #FECACA;
+
+  /* Status */
+  --green:    #16A34A;
+  --green-bg: #F0FDF4;
+  --green-bdr:#86EFAC;
+
+  /* Fonts */
+  --mono: 'Fira Code', monospace;
+  --sans: 'Fira Sans', sans-serif;
+
+  /* Spacing — 8px base unit (Swiss Modernism) */
+  --u: 8px;
+  --r: 8px;
+
+  /* Shadows — subtle, clean */
+  --sh:  0 1px 3px rgba(15,23,42,.06), 0 4px 16px rgba(15,23,42,.04);
+  --sh2: 0 8px 32px rgba(15,23,42,.10);
+  --sh3: 0 20px 60px rgba(15,23,42,.14);
+}
+
+body{
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--tx);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── NAV ── */
+nav{
+  position: sticky; top: 0; z-index: 500;
+  background: #fff;
+  border-bottom: 1px solid var(--bdr);
+  box-shadow: 0 1px 0 var(--bdr);
+}
+.nav-w{
+  max-width: 1400px; margin: 0 auto;
+  padding: 0 40px; height: 60px;
+  display: flex; align-items: center; gap: 4px;
+}
+.brand{
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; margin-right: 48px; flex-shrink: 0;
+}
+.brand-mark{
+  width: 34px; height: 34px; border-radius: 6px;
+  background: var(--red);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(220,38,38,.3);
+}
+.brand-mark img{ width:100%; height:100%; object-fit:contain; }
+.brand-mark-fb{ color:#fff; font-family:var(--mono); font-size:15px; font-weight:700; display:none; }
+.brand-name{
+  font-family: var(--mono); font-size: 14px; font-weight: 700;
+  color: var(--tx); letter-spacing: -0.5px;
+}
+.brand-name em{ color: var(--red); font-style: normal; }
+.nav-links{ display: flex; gap: 2px; list-style: none; flex: 1; }
+.nav-links a{
+  padding: 6px 14px; border-radius: var(--r);
+  text-decoration: none; color: var(--tx2);
+  font-size: 13.5px; font-weight: 500; transition: all .12s;
+}
+.nav-links a:hover{ background: var(--sur2); color: var(--tx); }
+.nav-links a.active{
+  background: var(--red); color: #fff; font-weight: 600;
+}
+
+/* ── PAGE ── */
+.page{ max-width: 1400px; margin: 0 auto; padding: 48px 40px 100px; }
+
+/* ── PAGE HEADER ── */
+.ph{
+  display: grid; grid-template-columns: 1fr auto;
+  align-items: end; gap: 24px;
+  margin-bottom: 40px;
+  padding-bottom: 32px;
+  border-bottom: 2px solid var(--tx);
+}
+.ph-left .eyebrow{
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  color: var(--red); letter-spacing: .08em; text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.ph-left .eyebrow::before{
+  content:''; width: 20px; height: 1.5px;
+  background: var(--red); border-radius: 2px;
+}
+.ph-left h1{
+  font-family: var(--mono); font-size: 52px; font-weight: 700;
+  color: var(--tx); letter-spacing: -3px; line-height: .9;
+  margin-bottom: 14px;
+}
+.ph-left h1 .r{ color: var(--red); }
+.ph-left p{
+  color: var(--tx2); font-size: 15px; font-weight: 300;
+  max-width: 440px; line-height: 1.8;
+}
+.ph-chips{ display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.ph-chip{
+  font-family: var(--mono); font-size: 11px; color: var(--tx3);
+  padding: 4px 10px; border-radius: 4px;
+  border: 1px solid var(--bdr); background: var(--sur);
+  letter-spacing: .02em;
+}
+.ph-badge{ text-align: right; }
+.ph-badge-n{
+  font-family: var(--mono); font-size: 80px; font-weight: 700;
+  color: var(--red); line-height: 1; letter-spacing: -5px;
+}
+.ph-badge-lbl{
+  font-family: var(--mono); font-size: 11px; color: var(--tx3);
+  letter-spacing: .06em; text-transform: uppercase; margin-top: 4px;
+}
+
+/* ── UPLOAD ── */
+.up{
+  background: var(--sur); border: 1px solid var(--bdr);
+  border-radius: var(--r); padding: 28px;
+  margin-bottom: 32px; box-shadow: var(--sh);
+}
+.up-label{
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  color: var(--tx3); text-transform: uppercase;
+  letter-spacing: .1em; margin-bottom: 14px;
+}
+.dz{
+  border: 1.5px dashed var(--bdr2); border-radius: var(--r);
+  padding: 52px 24px; text-align: center;
+  cursor: pointer; transition: all .18s;
+  background: var(--bg); position: relative;
+}
+.dz:hover, .dz.over{
+  border-color: var(--red); background: var(--red-pale);
+}
+.dz input{ position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.dz-icon{
+  width: 52px; height: 52px; border-radius: 10px;
+  background: var(--red-pale); border: 1px solid var(--red-bdr);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; margin: 0 auto 14px;
+}
+.dz-title{ font-family:var(--mono); font-size:16px; font-weight:600; color:var(--tx); margin-bottom:4px; }
+.dz-sub{ color:var(--tx2); font-size:13px; font-weight:300; margin-bottom:10px; }
+.dz-fmt{
+  font-family:var(--mono); font-size:11px; color:var(--tx3);
+  background:var(--sur); padding:4px 12px; border-radius:4px;
+  border:1px solid var(--bdr); display:inline-block;
+}
+.file-ok{
+  display:none; align-items:center; gap:12px;
+  background:var(--green-bg); border:1px solid var(--green-bdr);
+  border-radius:var(--r); padding:13px 16px; margin-top:12px;
+}
+.file-ok.show{ display:flex; }
+.file-ok-name{ font-weight:600; font-size:13px; color:#065F46; flex:1; }
+.file-ok-size{ font-family:var(--mono); font-size:11px; color:#047857; display:block; }
+.file-ok-x{
+  border:none; background:none; font-size:18px;
+  color:#047857; cursor:pointer; padding:2px 6px; border-radius:4px;
+}
+.file-ok-x:hover{ background:#dcfce7; }
+.err{
+  display:none; background:#FFF1F0; border:1px solid var(--red-bdr);
+  border-radius:var(--r); padding:12px 16px;
+  color:var(--red-h); font-size:13px; font-weight:500; margin-top:12px;
+}
+.err.show{ display:block; }
+
+/* ── LOADER ── */
+.loader{
+  display:none; flex-direction:column; align-items:center; gap:14px;
+  padding:56px; text-align:center;
+  background:var(--sur); border:1px solid var(--bdr);
+  border-radius:var(--r); margin-bottom:28px; box-shadow:var(--sh);
+}
+.loader.show{ display:flex; }
+.spin{
+  width:36px; height:36px;
+  border:2.5px solid var(--bdr2); border-top-color:var(--red);
+  border-radius:50%; animation:spin .7s linear infinite;
+}
+@keyframes spin{ to{transform:rotate(360deg)} }
+.loader-msg{
+  font-family:var(--mono); font-size:11.5px;
+  color:var(--tx3); letter-spacing:.06em;
+}
+
+/* ── STATS STRIP — Executive Dashboard KPI row ── */
+.stats{
+  display:grid; grid-template-columns:repeat(4,1fr);
+  background:var(--sur); border:1px solid var(--bdr);
+  border-radius:var(--r); overflow:hidden;
+  margin-bottom:28px; box-shadow:var(--sh);
+  animation: fadeUp .4s ease both;
+}
+.stat{
+  padding: 24px 28px;
+  border-right: 1px solid var(--bdr);
+  transition: background .15s;
+}
+.stat:last-child{ border-right:none; }
+.stat:hover{ background:var(--sur2); }
+.stat-label{
+  font-family:var(--mono); font-size:10px; font-weight:600;
+  color:var(--tx3); text-transform:uppercase; letter-spacing:.1em;
+  margin-bottom:10px;
+}
+.stat-value{
+  font-family:var(--mono); font-size:36px; font-weight:700;
+  color:var(--tx); letter-spacing:-2px; line-height:1;
+}
+.stat-value.alert{ color:var(--red); }
+.stat-sub{
+  font-size:14px; color:var(--red); margin-top:6px; font-weight:700;
+}
+
+/* ── DASHBOARD GRID ── */
+.dash{
+  display:grid; grid-template-columns:260px 1fr;
+  gap:20px; margin-bottom:28px; align-items:start;
+}
+.chart-card{
+  background:var(--sur); border:1px solid var(--bdr);
+  border-radius:var(--r); padding:22px; box-shadow:var(--sh);
+}
+.card-label{
+  font-family:var(--mono); font-size:10px; font-weight:600;
+  color:var(--tx3); text-transform:uppercase; letter-spacing:.1em;
+  margin-bottom:14px;
+}
+
+/* ── TOOLBAR ── */
+.toolbar{
+  background:var(--sur); border:1px solid var(--bdr);
+  border-radius:var(--r); padding:12px 16px;
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  box-shadow:var(--sh); margin-bottom:12px;
+}
+.btn{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:8px 14px; border-radius:var(--r);
+  font-size:12.5px; font-weight:600;
+  font-family:var(--mono); cursor:pointer;
+  border:1px solid var(--bdr); background:var(--sur);
+  color:var(--tx2); transition:all .14s; white-space:nowrap;
+  letter-spacing:.02em;
+}
+.btn:hover{ background:var(--sur2); color:var(--tx); border-color:var(--bdr2); }
+.btn-dark{ background:var(--tx); color:#fff; border-color:var(--tx); }
+.btn-dark:hover{ background:#1E293B; color:#fff; }
+.btn-red{ background:var(--red); color:#fff; border-color:var(--red); }
+.btn-red:hover{ background:var(--red-h); color:#fff; }
+
+
+/* ── SECTION HEADER ── */
+.sec-head{
+  display:flex; align-items:center; gap:16px;
+  margin-bottom:20px; animation:fadeUp .45s ease both;
+}
+.sec-head h2{
+  font-family:var(--mono); font-size:20px; font-weight:700;
+  color:var(--tx); letter-spacing:-1px; white-space:nowrap;
+}
+.sec-head h2 .dot{ color:var(--red); }
+.sec-rule{ flex:1; height:1px; background:var(--bdr); }
+.sec-meta{
+  font-family:var(--mono); font-size:13px; font-weight:700;
+  color:var(--red); white-space:nowrap; letter-spacing:.02em;
+}
+
+/* ── CARDS GRID — Swiss 12-col inspired ── */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(290px,1fr));
+  gap:16px; animation:fadeUp .5s ease both;
+}
+
+/* ── CATEGORY CARD ── */
+.cat-card{
+  background:var(--sur);
+  border:1px solid var(--bdr);
+  border-radius:var(--r);
+  overflow:hidden;
+  box-shadow:var(--sh);
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s;
+}
+.cat-card:hover{
+  transform:translateY(-3px);
+  box-shadow:var(--sh2);
+  border-color:var(--bdr2);
+}
+.card-accent{ height:3px; width:100%; }
+.card-head{
+  display:flex; align-items:center; gap:10px;
+  padding:16px 18px 12px; border-bottom:1px solid var(--bdr);
+}
+.card-ico{
+  width:32px; height:32px; border-radius:6px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px; flex-shrink:0;
+}
+.card-name{
+  flex:1; font-family:var(--mono); font-size:13px;
+  font-weight:600; color:var(--tx); letter-spacing:-.3px;
+}
+.pct-tag{
+  font-family:var(--mono); font-size:11px; font-weight:700;
+  color: var(--red);
+  background:var(--red-pale); padding:2px 7px; border-radius:3px;
+  border:1px solid var(--red-bdr); margin-left:6px; vertical-align:middle;
+}
+.card-badge{
+  font-family:var(--mono); font-size:11px; font-weight:700;
+  color:#fff; padding:3px 9px; border-radius:4px;
+  min-width:24px; text-align:center;
+}
+.card-body{ padding:12px 18px 16px; }
+.branch-list{
+  list-style:none; display:flex; flex-direction:column;
+  gap:3px; max-height:200px; overflow-y:auto;
+  scrollbar-width:thin; scrollbar-color:var(--bdr) transparent;
+}
+.branch-item{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:6px 8px; border-radius:6px;
+  cursor:pointer; transition:background .12s; gap:8px;
+}
+.branch-item:hover{ background:var(--sur2); }
+.b-name{
+  font-size:13px; font-weight:400; color:var(--tx);
+  flex:1; min-width:0; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.b-val{
+  font-family:var(--mono); font-size:11.5px; font-weight:600;
+  padding:2px 8px; border-radius:4px; color:#fff;
+  white-space:nowrap; flex-shrink:0;
+}
+.all-ok{
+  display:flex; align-items:center; gap:6px;
+  color:var(--green); font-size:13px; font-weight:500; padding:4px 0;
+}
+.card-foot{ padding:8px 18px 12px; border-top:1px solid var(--bdr); }
+.copy-btn{
+  font-family:var(--mono); font-size:12px; font-weight:600;
+  padding:6px 14px; border-radius:var(--r);
+  border:1.5px solid var(--red); background:var(--red-pale);
+  color:var(--red); cursor:pointer; transition:all .15s;
+  letter-spacing:.02em; display:inline-flex; align-items:center; gap:5px;
+}
+.copy-btn:hover{
+  background:var(--red); color:#fff;
+  border-color:var(--red); transform:translateY(-1px);
+  box-shadow:0 3px 10px rgba(220,38,38,.25);
+}
+.copy-btn:active{ transform:translateY(0); }
+
+/* ── MODAL ── */
+#bmodal{
+  display:none; position:fixed; inset:0; z-index:900;
+  background:rgba(15,23,42,.5); backdrop-filter:blur(8px);
+  align-items:center; justify-content:center; padding:24px;
+}
+.modal-box{
+  background:var(--sur); border-radius:12px;
+  border:1px solid var(--bdr);
+  padding:28px; max-width:440px; width:100%;
+  box-shadow:var(--sh3); position:relative;
+  max-height:85vh; overflow-y:auto;
+}
+.modal-close{
+  position:absolute; top:14px; right:16px;
+  border:none; background:none; font-size:18px;
+  cursor:pointer; color:var(--tx3); line-height:1;
+  width:28px; height:28px; border-radius:5px;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .12s;
+}
+.modal-close:hover{ background:var(--sur2); color:var(--tx); }
+.modal-branch{
+  font-family:var(--mono); font-size:20px; font-weight:700;
+  color:var(--tx); letter-spacing:-1px; margin-bottom:4px;
+}
+.modal-sub{
+  font-family:var(--mono); font-size:10.5px; color:var(--tx3);
+  letter-spacing:.07em; text-transform:uppercase; margin-bottom:18px;
+}
+.modal-row{
+  display:flex; align-items:center; gap:10px;
+  padding:10px 14px; border-radius:var(--r);
+  background:var(--sur2); border-left:3px solid transparent;
+  margin-bottom:8px;
+}
+.modal-cat{ font-size:13px; font-weight:500; flex:1; }
+.modal-val{
+  font-family:var(--mono); font-size:11.5px; font-weight:600;
+  color:#fff; padding:2px 8px; border-radius:4px;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{
+  from{ opacity:0; transform:translateY(10px); }
+  to{   opacity:1; transform:translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){ .dash{grid-template-columns:1fr} }
+@media(max-width:900px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stat:nth-child(2){border-right:none}
+  .stat:nth-child(3),.stat:nth-child(4){border-top:1px solid var(--bdr)}
+  .stat:nth-child(4){border-right:none}
+}
+@media(max-width:640px){
+  .page{padding:28px 20px 80px}
+  .ph{grid-template-columns:1fr}
+  .ph-left h1{font-size:36px}
+  .ph-badge{display:none}
+  .grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+}
+
+/* ── SATHYA AGENCY OVERRIDES ── */
+/* Larger, clearer fonts throughout */
+body{ font-size: 15px; }
+
+/* Eyebrow: serif, larger, red */
+.ph-left .eyebrow{
+  font-family: Cambria, Georgia, 'Times New Roman', serif;
+  font-size: 18px; font-weight: 700;
+  color: var(--red); letter-spacing: .02em;
+  text-transform: none;
+}
+.ph-left .eyebrow::before{ display: none; }
+
+/* H1 always red */
+.ph-left h1{ color: var(--red); font-size: 44px; letter-spacing: -2px; }
+.ph-left h1 .r{ color: var(--red); }
+
+/* Upload label red */
+.up-label{ color: var(--red); font-size: 12px; letter-spacing: .05em; }
+
+/* Drop zone text red & larger */
+.dz-title{ color: var(--red); font-size: 17px; }
+.dz-fmt{ color: var(--red); font-size: 12px; }
+
+/* Stats: all labels and values in red, larger */
+.stat-label{
+  color: var(--red); font-size: 11px;
+  font-weight: 700; letter-spacing: .08em;
+}
+.stat-value{ color: var(--red); font-size: 38px; }
+.stat-value.alert{ color: var(--red); }
+.stat-value-sm{
+  color: var(--red); font-size: 20px;
+  line-height: 1.3; letter-spacing: -.5px;
+}
+
+
+/* Dash: full width, no grid needed now chart gone */
+#dash{ display: block; margin-bottom: 28px; }
+
+
+
+/* Section heading larger */
+.sec-head h2{ font-size: 22px; }
+
+/* Card name larger & clearer */
+.card-name{ font-size: 14px; }
+.b-name{ font-size: 13.5px; }
+.b-val{ font-size: 12px; }
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-w">
+    <a href="index.html" class="brand">
+      <div class="brand-mark">
+        <img src="https://www.sathya.store/favicon.webp" alt="S"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <span class="brand-mark-fb">S</span>
+      </div>
+      <span class="brand-name"><em>Sathya Agency</em></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="leads.html">Leads</a></li>
+      <li><a href="growth.html" class="active">Growth</a></li>
+      <li><a href="rev.html">Reviews</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="eyebrow">Sathya Agency</div>
+      <h1>South-1 Growth <span class="r">Report</span></h1>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="up" id="up">
+  <div class="up-label">Sathya Agency Growth South 1</div>
+    <div class="dz" id="dz">
+      <input type="file" id="fi" accept=".xlsx,.xls,.xlsm,.xlsb">
+      <div class="dz-icon">&#128228;</div>
+      <div class="dz-title">Drop your Excel file here</div>
+      <div class="dz-sub"></div>
+      <div class="dz-fmt">.xlsx &nbsp;·&nbsp; .xls &nbsp;·&nbsp; .xlsm &nbsp;·&nbsp; .xlsb</div>
+    </div>
+    <div class="file-ok" id="file-ok">
+      <span style="font-size:20px">&#9989;</span>
+      <div style="flex:1">
+        <div class="file-ok-name" id="f-name">—</div>
+        <span class="file-ok-size" id="f-size">—</span>
+      </div>
+      <button class="file-ok-x" onclick="clearFile()">&#10005;</button>
+    </div>
+    <div class="err" id="err"></div>
+  </div>
+
+  <!-- LOADER -->
+  <div class="loader" id="loader">
+    <div class="spin"></div>
+    <div class="loader-msg" id="loader-msg">ANALYZING BRANCHES...</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results" style="display:none">
+
+    <!-- KPI STRIP -->
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Branches Analyzed</div>
+        <div class="stat-value" id="s-total">—</div>
+        <div class="stat-sub"></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Branches Flagged</div>
+        <div class="stat-value alert" id="s-flagged">—</div>
+        <div class="stat-sub">with at least one issue</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Most Red Marks</div>
+        <div class="stat-value stat-value-sm" id="s-most">—</div>
+        <div class="stat-sub" id="s-most-n">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Least Red Marks</div>
+        <div class="stat-value stat-value-sm" id="s-least">—</div>
+        <div class="stat-sub" id="s-least-n">—</div>
+      </div>
+    </div>
+
+
+
+    <!-- ISSUES SECTION -->
+    <div class="sec-head">
+      <h2>Red Mark Branches by Categories <span class="dot">&#9679;</span></h2>
+      <div class="sec-rule"></div>
+      <span class="sec-meta" id="sec-meta">—</span>
+      <button class="btn btn-dark" onclick="exportXL()">&#11015; Excel</button>
+      <button class="btn btn-red" onclick="exportPDF()">&#11015; PDF</button>
+    </div>
+    <div class="grid" id="cards"></div>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="bmodal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeMod()">&#10005;</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* ── EXACT EXCEL CONDITIONAL FORMATTING RULES ──
+   ACH%  (col B / js row[1]): < B41 threshold
+   GROWTH(col C / js row[2]): < 0  (strictly; space/blank = NOT flagged)
+   RANK  (col D): skip
+   AIR-COND..Computer (cols E-M / js row[4-12]): < 0
+   Gadgets(col N / js row[13]): < N41 threshold
+   EW    (col O / js row[14]): < O41 threshold
+*/
+var CATS = [
+  {n:'ACH %',      c:1,  color:'#DC2626',ico:'&#128308;',m:'thr', pct:true },
+  {n:'GROWTH',     c:2,  color:'#EA580C',ico:'&#128994;',m:'lt0', pct:false},
+  {n:'AIR-COND',   c:4,  color:'#0284C7',ico:'&#10052;&#65039;', m:'lt0', pct:false},
+  {n:'MOBILE',     c:5,  color:'#7C3AED',ico:'&#128241;',m:'lt0', pct:false},
+  {n:'LED TV',     c:6,  color:'#D97706',ico:'&#128250;',m:'lt0', pct:false},
+  {n:'FRIDGE',     c:7,  color:'#0369A1',ico:'&#129514;',m:'lt0', pct:false},
+  {n:'WASH-MAC',   c:8,  color:'#BE185D',ico:'&#129530;&#65039;',m:'lt0', pct:false},
+  {n:'HOME-THE',   c:9,  color:'#047857',ico:'&#127916;',m:'lt0', pct:false},
+  {n:'M+G+G+I',    c:10, color:'#4D7C0F',ico:'&#127859;&#65039;',m:'lt0', pct:false},
+  {n:'F+Wh+Wp+O',  c:11, color:'#C2410C',ico:'&#128168;',m:'lt0', pct:false},
+  {n:'Computer',   c:12, color:'#4338CA',ico:'&#128187;',m:'lt0', pct:false},
+  {n:'Gadgets',    c:13, color:'#7C3AED',ico:'&#127911;',m:'thr', pct:true },
+  {n:'EW',         c:14, color:'#0D9488',ico:'&#128737;&#65039;',m:'thr', pct:true }
+];
+
+var DATA=null;
+
+/* ── DRAG DROP ── */
+var dz=document.getElementById('dz');
+dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('over');});
+dz.addEventListener('dragleave',function(){dz.classList.remove('over');});
+dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('over');if(e.dataTransfer.files[0])go(e.dataTransfer.files[0]);});
+document.getElementById('fi').addEventListener('change',function(e){if(e.target.files[0])go(e.target.files[0]);});
+document.getElementById('bmodal').addEventListener('click',function(e){if(e.target===this)closeMod();});
+
+function go(file){
+  clearErr(); clearRes();
+  var n=file.name.toLowerCase();
+  var ok=['.xlsx','.xls','.xlsm','.xlsb'].some(function(x){return n.slice(-x.length)===x;});
+  if(!ok){showErr('Please upload an Excel file (.xlsx .xls .xlsm .xlsb)');return;}
+  if(!file.size){showErr('File is empty.');return;}
+
+  document.getElementById('up').style.display='none';
+  document.getElementById('f-name').textContent=file.name;
+  document.getElementById('f-size').textContent=(file.size/1024).toFixed(1)+' KB';
+  document.getElementById('file-ok').classList.add('show');
+  document.getElementById('loader').classList.add('show');
+  document.getElementById('loader-msg').textContent='READING '+file.name.toUpperCase()+'...';
+
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      document.getElementById('loader-msg').textContent='ANALYZING 36 BRANCHES...';
+      var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellStyles:true});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      if(!ws) throw new Error('No worksheet found.');
+      var json=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      if(!json||json.length<5) throw new Error('Not enough data.');
+      parse(json);
+    }catch(ex){
+      document.getElementById('loader').classList.remove('show');
+      showErr('Error: '+ex.message);
+    }
+  };
+  reader.onerror=function(){document.getElementById('loader').classList.remove('show');showErr('File read failed.');};
+  reader.readAsArrayBuffer(file);
+}
+
+function toN(v){
+  if(v===null||v===undefined||v==='') return null;
+  var n=parseFloat(v); return isNaN(n)?null:n;
+}
+
+function fmtVal(val,cat){
+  var n=toN(val);
+  if(n===null) return '—';
+  if(cat.pct) return (n*100).toFixed(1)+'%';
+  return String(Math.round(n));
+}
+
+function parse(json){
+  var tr=json[40]||[];
+  var tA=toN(tr[1]), tG=toN(tr[13]), tE=toN(tr[14]);
+  var cats={};
+  for(var i=0;i<CATS.length;i++) cats[CATS[i].n]=[];
+  var total=0;
+
+  for(var r=3;r<=38;r++){
+    var row=json[r]; if(!row) continue;
+    var b=String(row[0]||'').trim(); if(!b) continue;
+    total++;
+
+    for(var ci=0;ci<CATS.length;ci++){
+      var cat=CATS[ci], val=row[cat.c], n=toN(val), flag=false;
+      if(cat.m==='thr'){
+        var thr=cat.c===1?tA:(cat.c===13?tG:tE);
+        if(n!==null&&thr!==null&&n<thr) flag=true;
+      } else {
+        /* lt0: strictly less than 0 — space/blank NOT flagged, matches Excel CF */
+        if(n!==null&&n<0) flag=true;
+      }
+      if(flag) cats[cat.n].push({b:b, v:fmtVal(val,cat)});
+    }
+  }
+
+  DATA={cats:cats,total:total};
+  document.getElementById('loader').classList.remove('show');
+  render();
+}
+
+function render(){
+  var c=DATA.cats, t=DATA.total;
+  var um={}, mN=0, mK='—', lN=Infinity, lK='—';
+  for(var i=0;i<CATS.length;i++){
+    var k=CATS[i].n, n=c[k].length;
+    if(n>mN){mN=n;mK=k;}
+    if(n>0&&n<lN){lN=n;lK=k;}
+    for(var j=0;j<n;j++) um[c[k][j].b]=1;
+  }
+  var uc=Object.keys(um).length;
+  if(lN===Infinity){lN=0;lK='None';}
+
+  document.getElementById('s-total').textContent=t;
+  document.getElementById('s-flagged').textContent=uc;
+  document.getElementById('s-most').textContent=mK;
+  document.getElementById('s-most-n').textContent=mN+' branch'+(mN>1?'es':'');
+  document.getElementById('s-least').textContent=lK;
+  document.getElementById('s-least-n').textContent=lN>0?lN+' branch'+(lN>1?'es':''):'None';
+
+  var fl=0;
+  for(var i=0;i<CATS.length;i++) if(c[CATS[i].n].length>0) fl++;
+  document.getElementById('sec-meta').textContent=fl+' of '+CATS.length+' categories flagged';
+
+  buildCards(c);
+  document.getElementById('results').style.display='block';
+}
+
+/* chart removed */
+
+
+function buildCards(c){
+  var g=document.getElementById('cards'); g.innerHTML='';
+  var s=CATS.slice().sort(function(a,b){return c[b.n].length-c[a.n].length;});
+  var vis=0;
+
+  for(var i=0;i<s.length;i++){
+    var cat=s[i], v=c[cat.n];
+    var br=v.slice();
+    vis++;
+
+    var card=document.createElement('div'); card.className='cat-card';
+
+    var acc=document.createElement('div'); acc.className='card-accent';
+    acc.style.background=cat.color; card.appendChild(acc);
+
+    var hd=document.createElement('div'); hd.className='card-head';
+    var ic=document.createElement('div'); ic.className='card-ico';
+    ic.style.background=cat.color+'18'; ic.style.color=cat.color; ic.innerHTML=cat.ico;
+    var nw=document.createElement('span'); nw.className='card-name'; nw.textContent=cat.n;
+    if(cat.pct){
+      var pt=document.createElement('span'); pt.className='pct-tag'; pt.textContent='%';
+      nw.appendChild(pt);
+    }
+    var bdg=document.createElement('span'); bdg.className='card-badge';
+    bdg.style.background=br.length>0?cat.color:'#16A34A';
+    bdg.textContent=String(br.length);
+    hd.appendChild(ic);hd.appendChild(nw);hd.appendChild(bdg); card.appendChild(hd);
+
+    var body=document.createElement('div'); body.className='card-body';
+    if(!br.length){
+      var ok=document.createElement('p'); ok.className='all-ok';
+      ok.textContent='All clear — no issues'; body.appendChild(ok);
+    } else {
+      var ul=document.createElement('ul'); ul.className='branch-list';
+      for(var j=0;j<br.length;j++){
+        var li=document.createElement('li'); li.className='branch-item';
+        var bn=document.createElement('span'); bn.className='b-name'; bn.textContent=br[j].b;
+        var bv=document.createElement('span'); bv.className='b-val';
+        bv.style.background=cat.color; bv.innerHTML=br[j].v;
+        li.appendChild(bn);li.appendChild(bv);
+        (function(name){li.addEventListener('click',function(){showBranch(name);});})(br[j].b);
+        ul.appendChild(li);
+      }
+      body.appendChild(ul);
+    }
+    card.appendChild(body);
+
+    if(br.length>0){
+      var ft=document.createElement('div'); ft.className='card-foot';
+      var cb=document.createElement('button'); cb.className='copy-btn';
+      cb.textContent='Copy list';
+      (function(cn){cb.addEventListener('click',function(){doCopy(cn);});})(cat.n);
+      ft.appendChild(cb); card.appendChild(ft);
+    }
+    g.appendChild(card);
+  }
+
+  if(!vis){
+    var ac=document.createElement('div');
+    ac.style.cssText='grid-column:1/-1;padding:56px;text-align:center;background:var(--green-bg);border-radius:var(--r);border:1px solid var(--green-bdr);color:var(--green)';
+    var aci=document.createElement('div');
+    aci.style.cssText='font-size:44px;margin-bottom:12px';
+    aci.textContent=String.fromCodePoint(127881);
+    var h3=document.createElement('h3');
+    h3.style.cssText='font-family:var(--mono);font-size:20px;font-weight:700;margin-bottom:6px';
+    h3.textContent='No issues found';
+    var p=document.createElement('p');
+    p.style.cssText='font-size:13px;opacity:.8';
+    p.textContent='All branches performing well.';
+    ac.appendChild(aci);ac.appendChild(h3);ac.appendChild(p); g.appendChild(ac);
+  }
+}
+
+
+function doCopy(cat){
+  if(!DATA) return;
+  var txt=DATA.cats[cat].map(function(x){return x.b+'\t'+x.v;}).join('\n');
+  navigator.clipboard.writeText(txt)
+    .then(function(){alert('Copied '+DATA.cats[cat].length+' branches for '+cat);})
+    .catch(function(){prompt('Copy:',txt);});
+}
+
+function showBranch(bname){
+  if(!DATA) return;
+  var found=[];
+  for(var i=0;i<CATS.length;i++){
+    var match=DATA.cats[CATS[i].n].filter(function(x){return x.b===bname;});
+    if(match.length) found.push({cat:CATS[i],val:match[0].v});
+  }
+  var box=document.getElementById('modal-body'); box.innerHTML='';
+  var h=document.createElement('div'); h.className='modal-branch'; h.textContent=bname; box.appendChild(h);
+  var sub=document.createElement('div'); sub.className='modal-sub';
+  sub.textContent=found.length+' CATEGOR'+(found.length===1?'Y':'IES')+' FLAGGED';
+  box.appendChild(sub);
+  for(var i=0;i<found.length;i++){
+    var row=document.createElement('div'); row.className='modal-row';
+    row.style.borderLeftColor=found[i].cat.color;
+    var ic=document.createElement('span'); ic.innerHTML=found[i].cat.ico; ic.style.fontSize='14px';
+    var nm=document.createElement('span'); nm.className='modal-cat';
+    nm.textContent=found[i].cat.n; nm.style.color=found[i].cat.color;
+    var vl=document.createElement('span'); vl.className='modal-val';
+    vl.innerHTML=found[i].val; vl.style.background=found[i].cat.color;
+    row.appendChild(ic);row.appendChild(nm);row.appendChild(vl); box.appendChild(row);
+  }
+  document.getElementById('bmodal').style.display='flex';
+}
+
+function closeMod(){ document.getElementById('bmodal').style.display='none'; }
+
+function exportXL(){
+  if(!DATA) return;
+  var wb=XLSX.utils.book_new();
+  var sumRows=[['Category','Flagged','Branches & Values']];
+  for(var i=0;i<CATS.length;i++){
+    var k=CATS[i].n,br=DATA.cats[k];
+    sumRows.push([k,br.length,br.map(function(x){return x.b+'('+x.v+')';}).join(', ')]);
+  }
+  var sw=XLSX.utils.aoa_to_sheet(sumRows);
+  sw['!cols']=[{wch:15},{wch:8},{wch:90}];
+  XLSX.utils.book_append_sheet(wb,sw,'Summary');
+  for(var i=0;i<CATS.length;i++){
+    var k=CATS[i].n,br=DATA.cats[k];
+    if(!br.length) continue;
+    var rows=[['Branch','Value']];
+    for(var j=0;j<br.length;j++) rows.push([br[j].b,br[j].v]);
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:28},{wch:14}];
+    XLSX.utils.book_append_sheet(wb,ws,k.slice(0,31));
+  }
+  XLSX.writeFile(wb,'redmark_branches.xlsx');
+}
+
+function closePdfOverlay(){
+  var el=document.getElementById('pdf-overlay');
+  if(el) el.remove();
+}
+function exportPDF(){
+  if(!DATA){alert('No data loaded.');return;}
+  var cats=DATA.cats;
+  var sorted=CATS.slice().sort(function(a,b){return cats[b.n].length-cats[a.n].length;});
+  var rows='';
+  for(var i=0;i<sorted.length;i++){
+    var cat=sorted[i],br=cats[cat.n];
+    if(!br.length) continue;
+    rows+='<div class="pcat"><div class="phd">'+cat.n+' — '+br.length+' branch'+(br.length>1?'es':'')+'</div><table>';
+    for(var j=0;j<br.length;j++){
+      rows+='<tr><td class="pn">'+(j+1)+'.</td><td class="pb">'+br[j].b+'</td><td class="pv">'+br[j].v+'</td></tr>';
+    }
+    rows+='</table></div>';
+  }
+  var div=document.createElement('div');
+  div.id='pdf-overlay';
+  var css='<style>'
+    +'#pdf-overlay{display:block;position:fixed;inset:0;z-index:9999;background:#fff;overflow:auto;padding:40px 48px;font-family:Arial,sans-serif;font-size:13px;color:#0F172A}'
+    +'#pdf-overlay h1{font-size:22px;color:#DC2626;margin-bottom:4px}'
+    +'#pdf-overlay .psub{color:#64748B;margin-bottom:28px;font-size:12px}'
+    +'#pdf-overlay .pcat{margin-bottom:22px;page-break-inside:avoid}'
+    +'#pdf-overlay .phd{background:#FEF2F2;color:#B91C1C;font-weight:700;padding:7px 12px;border-radius:5px;margin-bottom:6px;border-left:4px solid #DC2626}'
+    +'#pdf-overlay table{width:100%;border-collapse:collapse}'
+    +'#pdf-overlay tr:nth-child(even){background:#F8FAFC}'
+    +'#pdf-overlay td{padding:5px 10px}'
+    +'#pdf-overlay .pn{color:#94A3B8;width:28px}'
+    +'#pdf-overlay .pv{color:#DC2626;font-weight:700;text-align:right;width:80px}'
+    +'#pdf-overlay .pcls{position:fixed;top:16px;right:24px;background:#DC2626;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}'
+    +'@media print{#pdf-overlay .pcls{display:none!important}body>*:not(#pdf-overlay){display:none!important}}'
+    +'</style>';
+  var flagged=document.getElementById('s-flagged').textContent;
+  div.innerHTML=css
+    +'<button class="pcls" onclick="closePdfOverlay()">✕ Close</button>'
+    +'<h1>Branch Issues Report</h1>'
+    +'<p class="psub">Total: '+DATA.total+' branches | Flagged: '+flagged+'</p>'
+    +rows;
+  document.body.appendChild(div);
+  setTimeout(function(){window.print();},300);
+}
+
+function clearFile(){
+  document.getElementById('up').style.display='';
+  dz.style.display='';
+  document.getElementById('file-ok').classList.remove('show');
+  document.getElementById('fi').value='';
+  clearRes(); clearErr(); DATA=null;
+}
+function clearRes(){
+  document.getElementById('results').style.display='none';
+}
+function showErr(m){var b=document.getElementById('err');b.textContent=m;b.classList.add('show');}
+function clearErr(){document.getElementById('err').classList.remove('show');}
+</script>
+</body>
+</html>
