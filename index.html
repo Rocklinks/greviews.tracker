@@ -1808,30 +1808,20 @@ function doExportExcel(dates,branches) {
   showToast("Generating Excel…");
   setTimeout(function(){
     try {
-      var lastDate=dates[dates.length-1];
-      var header=["#","Branch","AGM","Star Rating","Overall Reviews","Monthly Reviews"];
-      dates.forEach(function(d){header.push(fmtDate(d)+" Daily");});
+      var today=isoToday();
+      var header=["Branch","Overall Reviews","Star Rating",fmtDate(today)+" Daily"];
       var dataRows=branches.map(function(b){
         var bid=String(b.id);
-        var lastSnap=(D.daily[lastDate]&&D.daily[lastDate][bid])||{};
-        var row=[b.id,b.name,b.agm,
-          (lastSnap.star_rating||b.star_rating||0)+"★",
-          lastSnap.total_snap||b.overall||0,
-          lastSnap.monthly||b.monthly||0
+        var snap=(D.daily[today]&&D.daily[today][bid])||{};
+        return [
+          b.name,
+          snap.total_snap||b.overall||0,
+          (snap.star_rating||b.star_rating||0)+"★",
+          snap.daily_count||0
         ];
-        dates.forEach(function(d){
-          row.push((D.daily[d]&&D.daily[d][bid])?(D.daily[d][bid].daily_count||0):0);
-        });
-        return row;
       });
-      var totalRow=["","","TOTAL","","",""];
-      dates.forEach(function(d){
-        var s=branches.reduce(function(a,b){
-          var bid=String(b.id);
-          return a+((D.daily[d]&&D.daily[d][bid])?(D.daily[d][bid].daily_count||0):0);
-        },0);
-        totalRow.push(s);
-      });
+      var totalDaily=dataRows.reduce(function(a,r){return a+(r[3]||0);},0);
+      var totalRow=["TOTAL","","",totalDaily];
       var allRows=[header].concat(dataRows,[totalRow]);
       var wb=XLSX.utils.book_new();
       var ws=XLSX.utils.aoa_to_sheet(allRows);
@@ -1846,13 +1836,10 @@ function doExportExcel(dates,branches) {
           ws[addr].s={border:border,alignment:{horizontal:"center",vertical:"center",wrapText:true},font:isHdr||isTotal?{bold:true,sz:11,color:{rgb:"FFFFFF"}}:{sz:11},fill:fill};
         }
       }
-      ws['!cols']=[{wch:4},{wch:22},{wch:14},{wch:16},{wch:16},{wch:16}];
-      dates.forEach(function(){ws['!cols'].push({wch:14});});
+      ws['!cols']=[{wch:22},{wch:16},{wch:14},{wch:18}];
       ws['!rows']=allRows.map(function(_,i){return{hpt:i===0?22:18};});
       XLSX.utils.book_append_sheet(wb,ws,"Reviews");
-      var suffix=dates.length===1?dates[0]:dates[0]+"_to_"+dates[dates.length-1];
-      var agmSuffix=selectedAgms.has('__all__')?'':('_'+[...selectedAgms].join('-'));
-      XLSX.writeFile(wb,"Sathya_Reviews_"+suffix+agmSuffix+".xlsx");
+      XLSX.writeFile(wb,"Sathya_Reviews_"+today+".xlsx");
       showToast("Downloaded ✓");
     }catch(e){showToast("Export failed: "+e.message);}
   },100);
@@ -1961,7 +1948,7 @@ function BR(label,val,max,color){return'<div class="bar-row"><span class="bar-lb
 function fmt(n){return(n||0).toLocaleString("en-IN");}
 function fmtDateShort(iso){if(!iso)return"—";return new Date(iso+"T00:00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"short"});}
 function fmtDate(iso){if(!iso)return"—";return new Date(iso+"T00:00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});}
-function isoToday(){var d=new Date();return d.toISOString().slice(0,10);}
+function isoToday(){var d=new Date();var ist=new Date(d.getTime()+(5.5*60*60*1000));return ist.toISOString().slice(0,10);}
 function escH(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 var tTimer=null;
 function showToast(msg){var t=document.getElementById("toast");t.innerHTML=msg;t.classList.add("show");if(tTimer)clearTimeout(tTimer);tTimer=setTimeout(function(){t.classList.remove("show");},3500);}

@@ -216,8 +216,8 @@ async def scrape_branch(ctx,branch,snap_date,prev_total,old_stars):
 
 async def run():
     now_ist=datetime.utcnow()+IST
-    # Scraper runs at ~12AM IST → snap_date = YESTERDAY
-    snap_date=(now_ist.date()-timedelta(days=1)).strftime("%Y-%m-%d")
+    # Scraper runs at 11:50 PM IST → snap_date = TODAY
+    snap_date=now_ist.date().strftime("%Y-%m-%d")
     run_time=datetime.utcnow().isoformat()
     print(f"=== Scraper === snap={snap_date} ({now_ist.strftime('%H:%M IST')})")
 
