@@ -6,7 +6,7 @@
       "agm": "Sivaperumal",
       "overall": 6979,
       "star_rating": 4.9,
-      "monthly": 404
+      "monthly": 403
     },
     "2": {
       "id": 2,
@@ -5837,10 +5837,10 @@
     "2026-06-22": {
       "1": {
         "total_snap": 6979,
-        "daily_count": 21,
+        "daily_count": 20,
         "raw_delta": 20,
         "has_deletion": false,
-        "monthly": 404,
+        "monthly": 403,
         "star_rating": 4.9,
         "method": "scroll"
       },
