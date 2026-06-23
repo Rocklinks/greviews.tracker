@@ -443,6 +443,9 @@ tbody td{padding:11px 14px;white-space:nowrap}
 var GITHUB_REPO = "Rocklinks/greviews.tracker";
 var DASHBOARD_PASS = "prame26@";
 var DATA_JSON_URL = "./docs/data/reviews.json";
+var GH_BRANCH = "main";
+var WORKER_URL = "https://sathya-reviews.workers.dev";
+var PUSH_KEY = "sathya-push-2026";
 
 /* ═══════════════════════════════════════════════════════════
    AGM CONFIG
@@ -836,11 +839,11 @@ function buildEditView() {
   }).join('');
   return '<div class="section"><div class="section-hdr"><span class="section-title">✏️ Edit Data</span>' +
     '<div class="ctrls"><label style="font-size:13px;font-weight:500;color:var(--text2)">Date:</label><select class="fsel" onchange="editSwitchDate(this.value)">'+dateOpts+'</select>' +
-    '<button class="btn btn-primary" onclick="saveAndPush()">✓ Save & Push</button>' +
+    '<button class="btn btn-primary" onclick="saveAndPush()">💾 Save</button>' +
     '<label class="btn" style="border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer" title="Upload Excel and push to GitHub">📥 Upload Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="importExcelAndPush(this)"></label>' +
     '</div></div>' +
     '<div class="edit-warning"><span>ℹ️</span><div>' +
-    '<b>Edit → Save & Push.</b> Changes go live at <code>docs/data/reviews.json</code>.' +
+    '<b>Edit → Save.</b> Changes go live at <code>docs/data/reviews.json</code>.' +
     '<br>'+(prevDate?'Baseline: <b>'+fmtDate(prevDate)+'</b>':'<span style="color:var(--amber)">No previous date.</span>')+'</div></div>' +
     '<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Branch</th><th>AGM</th><th>⭐</th><th>Overall</th><th>'+fmtDateShort(editDate)+' Daily</th><th>Monthly</th></tr></thead><tbody>'+rows+'</tbody></table></div>' +
     '<div style="padding:10px 18px;background:var(--surface2);border-top:1px solid var(--border);font-size:12px;color:var(--muted)">Editing: <b>'+fmtDate(editDate)+'</b></div></div>';
@@ -891,6 +894,7 @@ function saveEdits() {
   pendingEdits={}; enrichAll(); buildAgmSidebar();
   return count;
 }
+
 function saveAndPush() {
   var count = saveEdits();
   if (!count) { showToast('No changes to save.'); return; }
@@ -900,58 +904,54 @@ function saveAndPush() {
 }
 
 /* ── GITHUB PUSH ── */
-var GH_TOKEN = localStorage.getItem("gh_token") || "";
-var GH_BRANCH = "main";
 
 function ensureGitHubToken() {
-  if (GH_TOKEN) return true;
-  var t = prompt("Enter GitHub Personal Access Token (repo scope):");
-  if (!t) return false;
-  GH_TOKEN = t.trim();
-  localStorage.setItem("gh_token", GH_TOKEN);
-  return true;
+  if (typeof WORKER_URL !== "undefined" && WORKER_URL) return true;
+  showToast("Worker not configured.");
+  return false;
 }
 
 async function pushToGitHub() {
-  if (!ensureGitHubToken()) { showToast("GitHub token required."); return; }
+  if (!ensureGitHubToken()) return;
   try {
     var path = "docs/data/reviews.json";
     var content = btoa(unescape(encodeURIComponent(JSON.stringify(D, null, 2))));
-    var getUrl = "https://api.github.com/repos/" + GITHUB_REPO + "/contents/" + path + "?ref=" + GH_BRANCH;
-    var getR = await fetch(getUrl, {headers: {"Authorization": "token " + GH_TOKEN, "Accept": "application/vnd.github.v3+json"}});
-    var sha = null;
-    if (getR.ok) { var gd = await getR.json(); sha = gd.sha; }
-    var body = {message: "Update reviews.json via dashboard", content: content, branch: GH_BRANCH};
-    if (sha) body.sha = sha;
-    var putR = await fetch("https://api.github.com/repos/" + GITHUB_REPO + "/contents/" + path, {
-      method: "PUT",
-      headers: {"Authorization": "token " + GH_TOKEN, "Content-Type": "application/json", "Accept": "application/vnd.github.v3+json"},
-      body: JSON.stringify(body)
+    var r = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + PUSH_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        path: path,
+        content: content,
+        message: "Update reviews.json via dashboard",
+      }),
     });
-    if (!putR.ok) { var err = await putR.json(); throw new Error(err.message || "Push failed"); }
+    if (!r.ok) { var err = await r.json(); throw new Error(err.message || "Push failed"); }
     showToast("Pushed to GitHub successfully!");
   } catch(e) {
     showToast("Push failed: " + e.message);
-    console.error("GitHub push error:", e);
+    console.error("Push error:", e);
   }
 }
 
 async function pushExcelToGitHub(excelBase64, fileName) {
   if (!ensureGitHubToken()) return false;
   try {
-    var path = "data/" + fileName;
-    var getUrl = "https://api.github.com/repos/" + GITHUB_REPO + "/contents/" + path + "?ref=" + GH_BRANCH;
-    var getR = await fetch(getUrl, {headers: {"Authorization": "token " + GH_TOKEN, "Accept": "application/vnd.github.v3+json"}});
-    var sha = null;
-    if (getR.ok) { var gd = await getR.json(); sha = gd.sha; }
-    var body = {message: "Upload " + fileName + " via dashboard", content: excelBase64, branch: GH_BRANCH};
-    if (sha) body.sha = sha;
-    var putR = await fetch("https://api.github.com/repos/" + GITHUB_REPO + "/contents/" + path, {
-      method: "PUT",
-      headers: {"Authorization": "token " + GH_TOKEN, "Content-Type": "application/json", "Accept": "application/vnd.github.v3+json"},
-      body: JSON.stringify(body)
+    var r = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + PUSH_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        path: "data/" + fileName,
+        content: excelBase64,
+        message: "Upload " + fileName + " via dashboard",
+      }),
     });
-    if (!putR.ok) { var err = await putR.json(); throw new Error(err.message || "Upload failed"); }
+    if (!r.ok) { var err = await r.json(); throw new Error(err.message || "Upload failed"); }
     return true;
   } catch(e) {
     showToast("❌ Excel push failed: " + e.message);
