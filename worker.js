@@ -4,6 +4,8 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
+const UA = { "User-Agent": "sathya-reviews-worker/1.0" };
+
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") {
@@ -34,10 +36,11 @@ export default {
     const repo = "Rocklinks/greviews.tracker";
     const branch = "main";
 
-    // Get current file SHA
+    // Step 1: Get current file SHA
     const getUrl = `https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`;
     const getR = await fetch(getUrl, {
       headers: {
+        ...UA,
         Authorization: `token ${token}`,
         Accept: "application/vnd.github.v3+json",
       },
@@ -49,7 +52,7 @@ export default {
       sha = gd.sha;
     }
 
-    // Push update
+    // Step 2: PUT update
     const body = { message, content, branch };
     if (sha) body.sha = sha;
 
@@ -58,6 +61,7 @@ export default {
       {
         method: "PUT",
         headers: {
+          ...UA,
           Authorization: `token ${token}`,
           "Content-Type": "application/json",
           Accept: "application/vnd.github.v3+json",
