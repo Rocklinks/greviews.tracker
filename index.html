@@ -249,8 +249,7 @@ tbody td{padding:11px 14px;white-space:nowrap}
 .btn-live:hover{transform:translateY(-1px)}
 .btn-rev{position:relative;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 2px 8px rgba(217,119,6,.3);border:none;padding:7px 14px;border-radius:9px;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:.15s}
 .btn-rev:hover{transform:translateY(-1px)}
-.neg-badge{position:absolute;top:-5px;right:-5px;background:var(--rose);color:#fff;font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 5px;border-radius:10px;border:2px solid var(--surface);display:none;min-width:18px;text-align:center}
-.neg-badge.show{display:block}
+
 
 /* ── PDF FRAME ── */
 #pdf-frame{position:fixed;top:-9999px;left:-9999px;width:210mm;border:none;visibility:hidden}
@@ -373,7 +372,7 @@ tbody td{padding:11px 14px;white-space:nowrap}
       <button class="rev-tab" id="del-tab-btn" onclick="revSwitchTab('deleted',this)">🗑 Deleted</button>
     </div>
     <div class="panel-body" id="rev-panel-body">
-      <div class="loading"><div class="spinner"></div>Loading from HuggingFace…</div>
+      <div class="loading"><div class="spinner"></div>Loading reviews…</div>
     </div>
   </div>
 </div>
@@ -392,7 +391,6 @@ tbody td{padding:11px 14px;white-space:nowrap}
     <span id="clock"></span>
     <button class="btn-rev" onclick="openRevPanel()">
       ⭐ <span>Reviews</span>
-      <span class="neg-badge" id="neg-badge"></span>
     </button>
     <div class="exp-split">
       <button class="exp-split-main" onclick="openModal('xls')">⬇ Save</button>
@@ -1215,8 +1213,8 @@ function renderLivePanelStreaming() {
 
 function renderLivePanelError(msg) {
   var body = document.getElementById("live-panel-body");
-  body.innerHTML = '<div class="rev-warn"><span>⚠️</span><div><b>Failed to fetch live data</b><br>'+escH(msg)+'<br><br>Falling back to stored snapshot…</div></div>';
-  setTimeout(function(){ renderLivePanelFallback(); }, 2000);
+  body.innerHTML = '<div class="rev-warn"><span>⚠️</span><div><b>Live scraper unavailable</b><br>'+escH(msg)+'<br><br>Showing stored snapshot instead…</div></div>';
+  setTimeout(function(){ renderLivePanelFallback(); }, 1000);
 }
 
 function renderLivePanelFallback() {
@@ -1317,6 +1315,14 @@ async function liveRefresh() {
     container.innerHTML = html;
   }
 
+  // Try SSE first, with a 15s timeout to quickly fall back if HF is down
+  var sseTimeout = setTimeout(function() {
+    if (!done) {
+      console.warn("SSE timed out after 15s, falling back to stored data");
+      liveFallbackToStored(btn);
+    }
+  }, 15000);
+
   try {
     var sseUrl = HF_LIVE_URL.replace('/live','/live-stream');
     var evtSource = new EventSource(sseUrl);
@@ -1326,6 +1332,7 @@ async function liveRefresh() {
         var d = JSON.parse(event.data);
         if (d.done) {
           done = true;
+          clearTimeout(sseTimeout);
           evtSource.close();
           updateProgress(branchCount, null);
           updateStats();
@@ -1352,31 +1359,49 @@ async function liveRefresh() {
     evtSource.onerror = function() {
       evtSource.close();
       if (!done) {
-        console.error("SSE connection failed, falling back to /live");
-        liveFallbackFetch(btn);
+        clearTimeout(sseTimeout);
+        console.error("SSE connection failed, falling back to stored data");
+        liveFallbackToStored(btn);
       }
     };
 
   } catch(e) {
+    clearTimeout(sseTimeout);
     console.error("SSE setup failed:", e);
-    liveFallbackFetch(btn);
+    liveFallbackToStored(btn);
   }
+}
+
+function liveFallbackToStored(btn) {
+  if (!D) {
+    var body = document.getElementById("live-panel-body");
+    body.innerHTML = '<div class="rev-warn"><span>⚠️</span><div><b>No data available</b><br>Could not connect to live scraper and no stored data found.</div></div>';
+    btn.classList.remove("loading"); btn.textContent = "🔄 Refresh";
+    return;
+  }
+  renderLivePanelFallback();
+  btn.classList.remove("loading"); btn.textContent = "🔄 Refresh";
+  showToast("Live scraper unavailable. Showing stored snapshot.");
 }
 
 async function liveFallbackFetch(btn) {
   try {
     var ctrl = new AbortController();
-    var timeout = setTimeout(function(){ ctrl.abort(); }, 150000);
+    var timeout = setTimeout(function(){ ctrl.abort(); }, 30000);
     var r = await fetch(HF_LIVE_URL + "?t=" + Date.now(), {signal: ctrl.signal});
     clearTimeout(timeout);
     if (!r.ok) throw new Error("HTTP " + r.status);
     var data = await r.json();
     LIVE.hfData = data;
     renderLivePanelFromHF(data);
-    showToast("Live data fetched from HF Docker ✓");
+    showToast("Live data fetched ✓");
   } catch(e) {
     console.error("HF Live fetch failed:", e);
-    renderLivePanelError(e.message || "Connection failed");
+    if (e.name === 'AbortError') {
+      renderLivePanelError("Request timed out. Showing stored data…");
+    } else {
+      renderLivePanelError(e.message || "Connection failed");
+    }
   }
   btn.classList.remove("loading"); btn.textContent = "🔄 Refresh";
 }
@@ -1691,24 +1716,7 @@ async function revLoadDate(date) {
   await loadRevData(date);
 }
 
-function updateNegBadge() {
-  if (!D) return;
-  var today = selectedDate;
-  var prev = getPrevDate(today);
-  if (!prev) return;
-  var neg = 0;
-  Object.values(D.branches||{}).forEach(function(b) {
-    var bid = String(b.id);
-    var cur = ((D.daily[today]||{})[bid]||{}).total_snap||0;
-    var prv = ((D.daily[prev]||{})[bid]||{}).total_snap||0;
-    if (cur > 0 && prv > 0 && cur < prv) neg++;
-    neg += ((D.daily[today]||{})[bid]||{}).deleted_count||0;
-  });
-  var badge = document.getElementById("neg-badge");
-  if (!badge) return;
-  if (neg > 0) { badge.textContent = neg; badge.classList.add("show"); }
-  else badge.classList.remove("show");
-}
+function updateNegBadge() {}
 
 /* ═══════════════════════════════════════════════════════════
    EXPORT MODAL
