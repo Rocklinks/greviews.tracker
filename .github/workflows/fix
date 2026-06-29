@@ -1,3 +1,5 @@
 name: Debug
 - name: Debug scraper
   run: python scraper/debug_one_branch.py 2>&1
+permissions:
+  contents: write
