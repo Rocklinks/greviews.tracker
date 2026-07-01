@@ -7657,42 +7657,258 @@
       }
     },
     "2026-06-30": {
-      "Tuticorin-1": 16,
-      "Tuticorin-2": 6,
-      "Thiruchendur-1": 0,
-      "Thisayanvilai-1": 1,
-      "Eral-2": 2,
-      "Udankudi": 4,
-      "Tirunelveli-1": 4,
-      "Valliyur-1": 3,
-      "Ambasamudram-1": 2,
-      "Anjugramam-1": 3,
-      "Nagercoil": 6,
-      "Marthandam": 0,
-      "Thuckalay-1": 2,
-      "Colachel-1": 2,
-      "Kulasekharam-1": 2,
-      "Monday Market": 1,
-      "Karungal-1": 9,
-      "Kovilpatti": 2,
-      "Ramnad": 0,
-      "Paramakudi": 1,
-      "Sayalkudi-1": 2,
-      "Villathikullam": 2,
-      "Sattur-2": 1,
-      "Sankarankovil-1": 2,
-      "Kayathar-1": 2,
-      "Thenkasi": 10,
-      "Thenkasi-2": 3,
-      "Surandai-1": 2,
-      "Puliyankudi-1": 1,
-      "Sengottai-1": 1,
-      "Rajapalayam": 1,
-      "Virudhunagar": 2,
-      "Virudhunagar-2": 2,
-      "Aruppukottai": 2,
-      "Aruppukottai-2": 2,
-      "Sivakasi": 1
+      "1": {
+        "daily_count": 16,
+        "total_snap": 7080,
+        "monthly": 544,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "2": {
+        "daily_count": 6,
+        "total_snap": 6392,
+        "monthly": 249,
+        "star_rating": 4.8,
+        "method": "excel"
+      },
+      "3": {
+        "daily_count": 0,
+        "total_snap": 1250,
+        "monthly": 89,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "4": {
+        "daily_count": 1,
+        "total_snap": 398,
+        "monthly": 91,
+        "star_rating": 5.0,
+        "method": "excel"
+      },
+      "5": {
+        "daily_count": 2,
+        "total_snap": 1113,
+        "monthly": 86,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "6": {
+        "daily_count": 4,
+        "total_snap": 2013,
+        "monthly": 106,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "7": {
+        "daily_count": 4,
+        "total_snap": 4296,
+        "monthly": 355,
+        "star_rating": 4.8,
+        "method": "excel"
+      },
+      "8": {
+        "daily_count": 3,
+        "total_snap": 1173,
+        "monthly": 98,
+        "star_rating": 4.8,
+        "method": "excel"
+      },
+      "9": {
+        "daily_count": 2,
+        "total_snap": 924,
+        "monthly": 128,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "10": {
+        "daily_count": 3,
+        "total_snap": 728,
+        "monthly": 97,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "17": {
+        "daily_count": 6,
+        "total_snap": 3148,
+        "monthly": 198,
+        "star_rating": 4.7,
+        "method": "excel"
+      },
+      "18": {
+        "daily_count": 0,
+        "total_snap": 1131,
+        "monthly": 119,
+        "star_rating": 4.7,
+        "method": "excel"
+      },
+      "19": {
+        "daily_count": 2,
+        "total_snap": 1120,
+        "monthly": 92,
+        "star_rating": 4.7,
+        "method": "excel"
+      },
+      "20": {
+        "daily_count": 2,
+        "total_snap": 288,
+        "monthly": 56,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "21": {
+        "daily_count": 2,
+        "total_snap": 425,
+        "monthly": 94,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "22": {
+        "daily_count": 1,
+        "total_snap": 348,
+        "monthly": 54,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "23": {
+        "daily_count": 9,
+        "total_snap": 760,
+        "monthly": 116,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "24": {
+        "daily_count": 2,
+        "total_snap": 2454,
+        "monthly": 245,
+        "star_rating": 4.6,
+        "method": "excel"
+      },
+      "26": {
+        "daily_count": 0,
+        "total_snap": 2397,
+        "monthly": 186,
+        "star_rating": 4.8,
+        "method": "excel"
+      },
+      "27": {
+        "daily_count": 1,
+        "total_snap": 1153,
+        "monthly": 119,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "28": {
+        "daily_count": 2,
+        "total_snap": 669,
+        "monthly": 105,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "31": {
+        "daily_count": 2,
+        "total_snap": 614,
+        "monthly": 53,
+        "star_rating": 4.8,
+        "method": "excel"
+      },
+      "29": {
+        "daily_count": 1,
+        "total_snap": 972,
+        "monthly": 93,
+        "star_rating": 4.8,
+        "method": "excel"
+      },
+      "30": {
+        "daily_count": 2,
+        "total_snap": 1012,
+        "monthly": 75,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "25": {
+        "daily_count": 2,
+        "total_snap": 993,
+        "monthly": 102,
+        "star_rating": 5.0,
+        "method": "excel"
+      },
+      "11": {
+        "daily_count": 10,
+        "total_snap": 6147,
+        "monthly": 186,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "12": {
+        "daily_count": 3,
+        "total_snap": 3952,
+        "monthly": 176,
+        "star_rating": 5.0,
+        "method": "excel"
+      },
+      "13": {
+        "daily_count": 2,
+        "total_snap": 2251,
+        "monthly": 166,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "14": {
+        "daily_count": 1,
+        "total_snap": 1013,
+        "monthly": 68,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "15": {
+        "daily_count": 1,
+        "total_snap": 711,
+        "monthly": 58,
+        "star_rating": 5.0,
+        "method": "excel"
+      },
+      "16": {
+        "daily_count": 1,
+        "total_snap": 2097,
+        "monthly": 166,
+        "star_rating": 4.8,
+        "method": "excel"
+      },
+      "32": {
+        "daily_count": 2,
+        "total_snap": 2126,
+        "monthly": 54,
+        "star_rating": 4.8,
+        "method": "excel"
+      },
+      "33": {
+        "daily_count": 2,
+        "total_snap": 1730,
+        "monthly": 174,
+        "star_rating": 4.9,
+        "method": "excel"
+      },
+      "34": {
+        "daily_count": 2,
+        "total_snap": 2047,
+        "monthly": 112,
+        "star_rating": 4.8,
+        "method": "excel"
+      },
+      "35": {
+        "daily_count": 2,
+        "total_snap": 960,
+        "monthly": 123,
+        "star_rating": 5.0,
+        "method": "excel"
+      },
+      "36": {
+        "daily_count": 1,
+        "total_snap": 1214,
+        "monthly": 75,
+        "star_rating": 4.8,
+        "method": "excel"
+      }
     }
   },
   "logs": [
